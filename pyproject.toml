@@ -1,0 +1,17 @@
+[project]
+name = "thesis-engine"
+version = "0.1.0"
+description = "Research-to-Conviction Investment Memo Generator with adversarial debate, Minto synthesis, and strict numerical traceability"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7.0",
+    "python-dotenv>=1.0.1",
+    "google-genai>=0.1.1",
+    "anthropic>=0.25.0",
+    "rich>=13.7.0",
+    "pytest>=8.0.0",
+]
+
+[tool.uv]
+package = false
