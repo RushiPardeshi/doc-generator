@@ -75,17 +75,17 @@ def verify_and_filter_claims(
     return verified, rejected
 
 
-CLAIM_EXTRACTION_SYSTEM = """You are an exacting forensic research analyst at a top-tier investment fund.
-Your task is to decompose unstructured corporate research documents into atomic, verifiable claims.
+CLAIM_EXTRACTION_SYSTEM = """You are an exacting forensic research analyst and lead scientific/technical reviewer.
+Your task is to decompose unstructured research documents, technical papers, corporate disclosures, or analytical dossiers into atomic, verifiable claims.
 
 CRITICAL INVARIANTS:
 1. Every claim MUST include a `source_quote` that is an EXACT, VERBATIM substring of the input text. Do not paraphrase, truncate, or alter punctuation in the quote. If a quote is not found verbatim, the claim will be rejected.
 2. Label each claim accurately:
-   - 'fact': Audited financial metrics, historical dates, filed customer figures, reported events.
-   - 'estimate': Growth estimates, market size projections, forward payback periods.
-   - 'opinion': Management commentary, subjective claims about moats, culture, or strategy.
-3. Extract ALL key metrics (revenues, growth rates, margins, customer counts, retention rates, payback periods) as distinct claims.
-4. Keep the `statement` atomic: one fact or assertion per claim.
+   - 'fact': Audited financial metrics, measured benchmark results, historical dates, observed outcomes, empirical findings.
+   - 'estimate': Forward projections, statistical confidence intervals, TAM/capacity estimates, modeling forecasts.
+   - 'opinion': Author/management commentary, subjective claims about moats, culture, architecture advantages, or strategy.
+3. Extract ALL key metrics (quantitative measurements, percentages, latency/throughput, error rates, financial figures, customer counts, dates) as distinct claims.
+4. Keep the `statement` atomic: one fact, finding, or assertion per claim.
 """
 
 
@@ -96,10 +96,10 @@ def extract_claims(
     """
     Extract claims from dossier_text and enforce the verbatim string match invariant.
     """
-    prompt = f"""Decompose the following investment research dossier into atomic, grounded claims.
-Extract at least 15 to 25 comprehensive claims covering financials, product adoption, unit economics, customer concentration, and competitive risks.
+    prompt = f"""Decompose the following research dossier / document into atomic, grounded claims.
+Extract at least 15 to 25 comprehensive claims covering core findings, empirical data, metrics, operational dynamics, methodology, and risks/limitations.
 
-DOSSIER CONTENT:
+DOCUMENT CONTENT:
 \"\"\"
 {dossier_text}
 \"\"\"

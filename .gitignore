@@ -45,5 +45,10 @@ ENV/
 .coverage
 htmlcov/
 
+# Databases
+*.db
+*.sqlite3
+*.db-journal
+
 # Logs
 *.log

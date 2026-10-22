@@ -40,19 +40,19 @@ class ComparativeEvaluationResult(BaseModel):
     verdict_explanation: str
 
 
-JUDGE_SYSTEM = """You are an independent Senior Partner at a multi-billion dollar investment fund.
-Your task is to conduct a BLIND, rigorous comparative evaluation of two investment committee memos.
+JUDGE_SYSTEM = """You are an independent, senior principal reviewer and domain expert.
+Your task is to conduct a BLIND, rigorous comparative evaluation of two executive research / decision memos.
 
 EVALUATION RUBRIC (1.0 to 5.0 scale):
 1. Falsifiability & Thesis Clarity (1-5):
-   - 1.0: Vague, non-committal summary ('Apex is well-positioned in a growing market').
-   - 5.0: Highly falsifiable answer-first thesis with quantitative invalidation triggers.
+   - 1.0: Vague, non-committal summary ('X is well-positioned in a growing field', 'findings are promising').
+   - 5.0: Highly falsifiable answer-first thesis with concrete, quantitative invalidation triggers.
 2. Evidence Grounding & Linkage (1-5):
    - 1.0: Unsubstantiated claims, qualitative fluff, or missing citations.
-   - 5.0: Every claim is mathematically linked to specific filing metrics (NRR, payback, margins, revenue).
+   - 5.0: Every claim is linked to specific cited research metrics, benchmark data, or empirical findings.
 3. Pre-Mortem Realism (1-5):
-   - 1.0: Generic boilerplate risks ('macro risks', 'cybersecurity threats').
-   - 5.0: Concrete structural failure modes (AWS bundling, unit economics deterioration, cloud decelerations).
+   - 1.0: Generic boilerplate risks ('macroeconomic uncertainty', 'unforeseen challenges').
+   - 5.0: Concrete, structural failure modes exposing specific bottlenecks, broken assumptions, or unviable tradeoffs.
 4. Prose Conviction & Slop Absence (1-5):
    - 1.0: Classic AI slop ('not only X but also Y', 'testament to', 'evolving landscape', em-dash spam).
    - 5.0: Understated, clean analyst prose; zero throat-clearing; high empirical density.

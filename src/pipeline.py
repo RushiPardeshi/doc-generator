@@ -103,14 +103,14 @@ def run_pipeline(
                     break
     else:
         # Ablated mode: default to simple first-order conviction without adversarial pre-mortem
-        stance = ThesisStance.BUY
+        stance = ThesisStance.RECOMMEND
         selected_thesis = CandidateThesis(
             id="T_ABLATED",
-            stance=ThesisStance.BUY,
-            headline=f"Invest in {cfg.company_name} driven by high growth and retention metrics",
-            core_mechanism="Multi-product adoption and net expansion",
+            stance=ThesisStance.RECOMMEND,
+            headline=f"Proceed with {cfg.company_name} based on primary empirical findings and verified metrics",
+            core_mechanism="Substantiated by verified claims and core metrics",
             supporting_claim_ids=[c.id for c in verified_claims[:3]],
-            primary_vulnerability="Competition from incumbents",
+            primary_vulnerability="Key structural bottlenecks or counter-evidence",
         )
 
     # Stage 3: Grounded Minto Synthesis

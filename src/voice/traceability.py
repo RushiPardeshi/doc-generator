@@ -16,13 +16,15 @@ class TraceabilityReport(BaseModel):
     error_message: Optional[str] = None
 
 
-# Pattern targeting financial figures, percentages, multi-digit counts, and currency metrics
+# Pattern targeting financial figures, scientific/engineering metrics, percentages, multipliers, and multi-digit counts
 METRIC_PATTERN = re.compile(
     r"""
-    (?:\$\s*\d+(?:\.\d+)?(?:\s*(?:billion|million|trillion|B|M|K|k))?) | # $153.3M, $10.9 million
-    (?:\d+(?:\.\d+)?\s*%) |                                             # 79%, 146%, 76.1%
-    (?:\b\d{1,3}(?:,\d{3})+\b) |                                        # 8,800, 10,000
-    (?:\b\d+(?:\.\d+)?\s*(?:months|years|days|quarters)\b)              # 12 months, 3 years
+    (?:[\$€£¥]\s*\d+(?:\.\d+)?(?:\s*(?:billion|million|trillion|B|M|K|k))?) | # $153.3M, €10.9 million
+    (?:\d+(?:\.\d+)?\s*(?:%|pp|percent)\b) |                                    # 79%, 146%, 76.1%, 5 pp
+    (?:\d+(?:\.\d+)?\s*x\b) |                                                   # 4.5x, 10x, 2x
+    (?:\d+(?:\.\d+)?\s*(?:ms|µs|ns|seconds?|sec|minutes?|mins?|hours?|days?|weeks?|months?|years?|quarters?)\b) | # 120ms, 3 seconds, 12 months
+    (?:\d+(?:\.\d+)?\s*(?:gbps|mbps|kbps|tb|gb|mb|kb|req/s|ops/s|qps|flops|tflops|hz|ghz|mhz)\b) |                 # 10 Gbps, 500 req/s, 2.4 GHz
+    (?:\b\d{1,3}(?:,\d{3})+\b)                                                  # 8,800, 100,000
     """,
     re.VERBOSE | re.IGNORECASE,
 )

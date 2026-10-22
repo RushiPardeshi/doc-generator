@@ -37,7 +37,7 @@ def create_markdown_report(
     from_tracker = token_tracker.get_markdown_summary()
 
     content = f"""# Thesis Engine: Evaluation & Benchmark Report
-**Target Company**: {company_name}  
+**Target Subject**: {company_name}  
 **Generator Model**: `{pipeline_result.ablation_mode}`  
 **Preferred by Judge**: `{'Pipeline' if judge_result.preferred_memo == label_pipeline else 'Baseline'}`
 
@@ -128,7 +128,14 @@ def main():
         default=str(DOSSIERS_DIR / "apex_observability_2019.md"),
         help="Path to research dossier markdown file",
     )
-    parser.add_argument("--company", type=str, default="Apex Systems", help="Company name")
+    parser.add_argument(
+        "--subject",
+        "--company",
+        dest="subject",
+        type=str,
+        default="Apex Systems",
+        help="Subject, technology, proposal, or company name",
+    )
     parser.add_argument("--generator", type=str, default=DEFAULT_GENERATOR_PROVIDER, help="Generator provider (gemini/anthropic)")
     parser.add_argument("--judge", type=str, default=DEFAULT_JUDGE_PROVIDER, help="Judge provider (anthropic/gemini)")
     parser.add_argument(
@@ -145,7 +152,7 @@ def main():
         sys.exit(1)
 
     dossier_text = dossier_path.read_text()
-    console.print(Panel(f"[bold green]Starting Benchmark for {args.company}[/bold green]\nDossier: {dossier_path.name}\nGenerator: {args.generator} | Judge: {args.judge} | Ablation: {args.ablate}"))
+    console.print(Panel(f"[bold green]Starting Benchmark for {args.subject}[/bold green]\nDossier: {dossier_path.name}\nGenerator: {args.generator} | Judge: {args.judge} | Ablation: {args.ablate}"))
 
     # 1. Initialize Providers
     try:
@@ -166,7 +173,7 @@ def main():
 
     # 3. Run Pipeline
     pipe_cfg = PipelineConfig(
-        company_name=args.company,
+        company_name=args.subject,
         enable_debate=(args.ablate != "debate"),
         enable_voice=(args.ablate != "voice"),
     )
@@ -185,7 +192,7 @@ def main():
     base_scorecard = judge_result.memo_a_scorecard if label_base == "A" else judge_result.memo_b_scorecard
     pipe_scorecard = judge_result.memo_b_scorecard if label_base == "A" else judge_result.memo_a_scorecard
 
-    table = Table(title=f"Benchmark Matrix: {args.company}")
+    table = Table(title=f"Benchmark Matrix: {args.subject}")
     table.add_column("Evaluation Dimension / Metric", style="cyan", no_wrap=True)
     table.add_column("Mega-Prompt Baseline", style="magenta")
     table.add_column("Full Thesis Pipeline", style="green")
@@ -211,7 +218,7 @@ def main():
     report_path = Path("eval_report.md")
     blind_path = Path("blind_eval.md")
     create_markdown_report(
-        company_name=args.company,
+        company_name=args.subject,
         baseline_memo=baseline_memo,
         pipeline_result=pipeline_result,
         baseline_lint=baseline_lint,

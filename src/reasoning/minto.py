@@ -17,32 +17,32 @@ class MintoPillar(BaseModel):
 
 
 class MintoDraft(BaseModel):
-    """Investment memo structured strictly according to Barbara Minto's Pyramid Principle."""
-    company_name: str = Field(description="Name of the target company")
-    recommendation: ThesisStance = Field(description="BUY, CONDITIONAL, or PASS")
+    """Executive decision memo structured strictly according to Barbara Minto's Pyramid Principle."""
+    company_name: str = Field(description="Name of the target subject, company, technology, proposal, or research topic")
+    recommendation: ThesisStance = Field(description="RECOMMEND/BUY, CONDITIONAL, or REJECT/PASS")
     executive_thesis: str = Field(
-        description="Paragraph 1 Answer-First core thesis and investment recommendation. Zero throat-clearing."
+        description="Paragraph 1 Answer-First core thesis and executive conclusion. Zero throat-clearing."
     )
     pillar_1: MintoPillar = Field(description="First supporting structural pillar")
     pillar_2: MintoPillar = Field(description="Second supporting structural pillar")
     pillar_3: MintoPillar = Field(description="Third supporting structural pillar")
     key_risks: List[str] = Field(
-        description="Top 3 unvarnished fatal risks or bear-case failure modes from the pre-mortem"
+        description="Top 3 unvarnished fatal risks, failure modes, or structural bottlenecks from the pre-mortem"
     )
     what_would_change_my_mind: List[str] = Field(
         description="2-3 explicit falsification triggers derived directly from verified claim metrics"
     )
 
 
-MINTO_SYNTHESIZER_SYSTEM = """You are an elite investment partner drafting an Investment Committee Memo.
-You write according to Barbara Minto's Pyramid Principle: ANSWER-FIRST, followed by exactly 3 supporting pillars, unvarnished risks, and falsification criteria.
+MINTO_SYNTHESIZER_SYSTEM = """You are an elite research director and analytical decision-maker drafting an Executive Research & Decision Memo.
+You write according to Barbara Minto's Pyramid Principle: ANSWER-FIRST, followed by exactly 3 supporting pillars, unvarnished structural risks, and falsification criteria.
 
 CRITICAL INVARIANTS:
-1. ANSWER-FIRST: Paragraph 1 is the investment decision (BUY, CONDITIONAL, or PASS) and the central thesis. Do NOT start with corporate history or throat-clearing.
-2. CITATION DISCIPLINE: Every single supporting pillar MUST cite relevant Claim IDs (e.g. [C1], [C5]) and utilize only the verified metrics provided in those claims.
-3. ZERO INVENTED NUMBERS: Every number, dollar figure, and percentage you write MUST originate from the cited claims. Never fabricate benchmark metrics or estimates.
-4. FALSIFICATION TRIGGERS: 'What Would Change My Mind' must define quantifiable triggers anchored to the claims (e.g., 'If Net Expansion Rate drops from 146% [C7] below 120%', 'If AWS gross margin pressure drives gross margins from 76.1% [C3] below 68%').
-5. PASS HANDLING: If the recommendation is PASS, the 3 pillars must detail why the asset is structurally uninvestable or fatally vulnerable to the pre-mortem failure mode.
+1. ANSWER-FIRST: Paragraph 1 is the core conclusion/decision (RECOMMEND/BUY, CONDITIONAL, or REJECT/PASS) and the central thesis. Do NOT start with historical throat-clearing or summary padding.
+2. CITATION DISCIPLINE: Every single supporting pillar MUST cite relevant Claim IDs (e.g. [C1], [C5]) and utilize only the verified metrics and empirical evidence provided in those claims.
+3. ZERO INVENTED NUMBERS: Every measurement, number, percentage, and metric you write MUST originate from the cited claims. Never fabricate benchmark metrics or estimates.
+4. FALSIFICATION TRIGGERS: 'What Would Change My Mind' must define quantifiable triggers anchored to the claims (e.g., 'If metric X degrades from Y below Z [C#]').
+5. REJECT/PASS HANDLING: If the conclusion is REJECT or PASS, the 3 pillars must detail why the subject/hypothesis is structurally unviable or fatally vulnerable to the pre-mortem failure mode.
 """
 
 
@@ -68,7 +68,7 @@ def synthesize_minto_draft(
             f"Primary Vulnerability: {selected_thesis.primary_vulnerability}\n"
         )
     else:
-        thesis_info = "All candidate theses failed the adversarial pre-mortem. Synthesize an unvarnished PASS / AVOID memo.\n"
+        thesis_info = "All candidate theses failed the adversarial pre-mortem. Synthesize an unvarnished REJECT / PASS memo.\n"
 
     premortem_summary = debate_result.arbitration_summary
     fatal_flaws = []
@@ -77,9 +77,9 @@ def synthesize_minto_draft(
         fatal_flaws.extend(attack.fatal_flaws)
         falsification_hints.extend(attack.falsification_triggers)
 
-    prompt = f"""Draft a Minto Pyramid Investment Memo for {company_name}.
+    prompt = f"""Draft a Minto Pyramid Research & Decision Memo for {company_name}.
 
-DECISION: {stance.value}
+DECISION / STANCE: {stance.value}
 {thesis_info}
 PRE-MORTEM SUMMARY: {premortem_summary}
 EXPOSED FATAL FLAWS: {', '.join(fatal_flaws[:5])}
@@ -100,13 +100,13 @@ VERIFIED CLAIMS (USE THESE EXACT METRICS AND CITE IDS [C#]):
 def format_minto_to_markdown(draft: MintoDraft) -> str:
     """Format a MintoDraft object into clean, human-readable markdown prose."""
     lines = [
-        f"# Investment Memo: {draft.company_name}",
-        f"**Recommendation**: `{draft.recommendation.value}`",
+        f"# Executive Research & Decision Memo: {draft.company_name}",
+        f"**Conclusion / Recommendation**: `{draft.recommendation.value}`",
         "",
         "## 1. Executive Thesis (Answer-First)",
         draft.executive_thesis,
         "",
-        "## 2. Supporting Investment Pillars",
+        "## 2. Supporting Strategic / Empirical Pillars",
         f"### Pillar 1: {draft.pillar_1.headline}",
         draft.pillar_1.argument,
         f"*Citations: {', '.join(f'[{cid}]' for cid in draft.pillar_1.cited_claim_ids)}*",

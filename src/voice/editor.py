@@ -6,12 +6,12 @@ from src.voice.linter import lint_memo, LintResult
 from src.voice.traceability import verify_numerical_traceability, TraceabilityReport
 from src.llm.base import LLMProvider
 
-STYLE_DIRECTIVE = """You are an exacting senior managing director editing an investment committee memo.
-Your mandate is to eliminate every trace of generic AI writing and replace it with crisp, understated analyst prose.
+STYLE_DIRECTIVE = """You are an exacting senior editor and lead research director editing an executive research & decision memo.
+Your mandate is to eliminate every trace of generic AI writing and replace it with crisp, understated, authoritative analytical prose.
 
 STYLE INVARIANTS:
-1. HARD NUMERICAL TRACEABILITY: You are STRICTLY FORBIDDEN from inventing any numbers, percentages, multiples, or dollar amounts. You must preserve the exact verified metrics from the input and cited claims.
-2. ZERO THROAT-CLEARING: Delete all introductory warm-ups ("Apex represents an attractive...", "In today's digital landscape...", "It is worth noting that..."). Start immediately with the active assertion.
+1. HARD NUMERICAL TRACEABILITY: You are STRICTLY FORBIDDEN from inventing any numbers, percentages, multiples, measurements, or dollar amounts. You must preserve the exact verified metrics from the input and cited claims.
+2. ZERO THROAT-CLEARING: Delete all introductory warm-ups ("X represents an attractive...", "In today's digital landscape...", "It is worth noting that..."). Start immediately with the active assertion.
 3. BANNED CLICHÉS: Never use "not only X, but also Y", "testament to", "delve", "tapestry", "landscape", "poised to", "holistic", or "pivotal".
 4. PUNCTUATION DISCIPLINE: Minimize em-dashes (at most 1 in the entire memo). Use standard periods. Avoid symmetrical rule-of-three triplets.
 5. PRESERVE CITATIONS: Maintain all bracketed Claim citations (e.g. [C1], [C4]) and the Minto section structure.

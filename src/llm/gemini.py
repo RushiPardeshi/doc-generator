@@ -55,8 +55,15 @@ class GeminiProvider:
                     return call_fn(model)
                 except errors.ClientError as e:
                     last_error = e
-                    if getattr(e, "code", None) == 404 or "404" in str(e) or "not found" in str(e).lower():
-                        console.print(f"[dim]• Model '{model}' not available (404/deprecated). Routing to next model...[/dim]")
+                    if (
+                        getattr(e, "code", None) in (404, 429)
+                        or "404" in str(e)
+                        or "429" in str(e)
+                        or "resource_exhausted" in str(e).lower()
+                        or "not found" in str(e).lower()
+                        or "quota" in str(e).lower()
+                    ):
+                        console.print(f"[dim]• Model '{model}' quota/resource exhausted ({getattr(e, 'code', '4xx')}). Routing to next fallback model...[/dim]")
                         break
                     raise e
                 except errors.ServerError as e:
