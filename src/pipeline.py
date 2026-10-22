@@ -1,6 +1,6 @@
 """End-to-end investment reasoning pipeline with ablation support."""
 
-from typing import List, Optional
+from typing import List, Optional, Callable, Dict, Any
 from pydantic import BaseModel, Field
 
 from src.reasoning.claims import GroundedClaim, extract_claims
@@ -46,6 +46,7 @@ def run_pipeline(
     dossier_text: str,
     provider: LLMProvider,
     config: Optional[PipelineConfig] = None,
+    progress_callback: Optional[Callable[[str, str, int, int, Optional[Dict[str, Any]]], None]] = None,
 ) -> PipelineResult:
     """
     Execute the multi-stage investment memo generation pipeline.
@@ -71,11 +72,22 @@ def run_pipeline(
 
     # Stage 1: Claim Extraction & Invariant Verification
     console.print("   [cyan]• Stage 1/4: Extracting atomic claims & checking verbatim quotes...[/cyan]")
+    if progress_callback:
+        progress_callback("claims_start", "Extracting atomic claims & verifying verbatim source quotes...", 1, 4, None)
+
     token_tracker.set_current_stage("Stage 1: Grounded Claims Extraction")
     verified_claims, rejected_claims = extract_claims(dossier_text, provider)
     if not verified_claims:
         raise RuntimeError("No claims survived verbatim verification against source dossier.")
     console.print(f"     [green]✓ Extracted {len(verified_claims)} grounded claims ({len(rejected_claims)} discarded for quote mismatch)[/green]")
+    if progress_callback:
+        progress_callback(
+            "claims_done",
+            f"Extracted {len(verified_claims)} verified claims ({len(rejected_claims)} discarded)",
+            1,
+            4,
+            {"verified_count": len(verified_claims), "rejected_count": len(rejected_claims), "sample_claims": [c.model_dump() for c in verified_claims[:5]]}
+        )
 
     # Stage 2: Theses & Pre-Mortem Debate (or fallback if ablated)
     candidate_theses: Optional[List[CandidateThesis]] = None
@@ -85,10 +97,22 @@ def run_pipeline(
 
     if cfg.enable_debate:
         console.print("   [cyan]• Stage 2/4: Formulating 3 candidate theses (BUY, CONDITIONAL, PASS)...[/cyan]")
+        if progress_callback:
+            progress_callback("theses_start", "Formulating 3 candidate theses (BUY, CONDITIONAL, PASS)...", 2, 4, None)
+
         token_tracker.set_current_stage("Stage 2a: 360° Candidate Theses")
         candidate_theses = generate_candidate_theses(verified_claims, provider)
         for t in candidate_theses:
             console.print(f"     - [{t.stance.value}] {t.headline}")
+
+        if progress_callback:
+            progress_callback(
+                "theses_done",
+                "Formulated candidate theses. Launching adversarial 3-year pre-mortem debate...",
+                2,
+                4,
+                {"theses": [t.model_dump() for t in candidate_theses]}
+            )
 
         console.print("   [cyan]• Stage 2b: Running adversarial 3-year pre-mortem attack (Du et al., 2023)...[/cyan]")
         token_tracker.set_current_stage("Stage 2b: Pre-Mortem Adversarial Debate")
@@ -101,6 +125,19 @@ def run_pipeline(
                 if t.id == debate_result.selected_thesis_id:
                     selected_thesis = t
                     break
+
+        if progress_callback:
+            progress_callback(
+                "debate_done",
+                f"Pre-mortem debate complete: Conviction stance is [{stance.value}].",
+                2,
+                4,
+                {
+                    "final_stance": stance.value,
+                    "selected_thesis_id": debate_result.selected_thesis_id,
+                    "summary": debate_result.arbitration_summary,
+                }
+            )
     else:
         # Ablated mode: default to simple first-order conviction without adversarial pre-mortem
         stance = ThesisStance.RECOMMEND
@@ -115,6 +152,9 @@ def run_pipeline(
 
     # Stage 3: Grounded Minto Synthesis
     console.print("   [cyan]• Stage 3/4: Synthesizing Answer-First Minto Pyramid draft...[/cyan]")
+    if progress_callback:
+        progress_callback("minto_start", "Synthesizing Answer-First Minto Pyramid draft...", 3, 4, None)
+
     token_tracker.set_current_stage("Stage 3: Answer-First Minto Synthesis")
     minto_draft = synthesize_minto_draft(
         company_name=cfg.company_name,
@@ -130,10 +170,15 @@ def run_pipeline(
         provider=provider,
     )
     draft_markdown = format_minto_to_markdown(minto_draft)
+    if progress_callback:
+        progress_callback("minto_done", "Minto Pyramid draft generated.", 3, 4, {"recommendation": minto_draft.recommendation})
 
     # Stage 4: Voice Editorial Pass & Traceability Guard
     if cfg.enable_voice:
         console.print("   [cyan]• Stage 4/4: Executing editorial de-slopping & strict numerical traceability...[/cyan]")
+        if progress_callback:
+            progress_callback("voice_start", "Executing editorial de-slopping & hard numerical traceability check...", 4, 4, None)
+
         token_tracker.set_current_stage("Stage 4: Voice Editorial De-slopping")
         final_memo, lint_result, traceability = edit_memo(
             draft_markdown=draft_markdown,
@@ -142,13 +187,25 @@ def run_pipeline(
         )
         status_str = "[green]PASSED[/green]" if traceability.is_valid else "[red]FAILED[/red]"
         console.print(f"     [green]✓ De-slopping complete (Slop Score: {lint_result.slop_score:.1f}/100 | Traceability: {status_str})[/green]")
+        if progress_callback:
+            progress_callback(
+                "voice_done",
+                f"Editorial pass complete. Slop score: {lint_result.slop_score:.1f}/100.",
+                4,
+                4,
+                {
+                    "slop_score": lint_result.slop_score,
+                    "traceability_passed": traceability.is_valid,
+                    "untraced_count": len(traceability.untraced_numbers),
+                }
+            )
     else:
         # Ablated mode: return raw Minto draft without stylistic rewriting
         final_memo = draft_markdown
         lint_result = lint_memo(draft_markdown)
         traceability = verify_numerical_traceability(draft_markdown, verified_claims)
 
-    return PipelineResult(
+    result = PipelineResult(
         final_memo=final_memo,
         company_name=cfg.company_name,
         ablation_mode=ablation_mode,
@@ -159,3 +216,7 @@ def run_pipeline(
         lint_result=lint_result,
         traceability_report=traceability,
     )
+    if progress_callback:
+        progress_callback("complete", "Memo generation successfully finished.", 4, 4, {"final_memo": final_memo})
+
+    return result

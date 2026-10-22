@@ -9,5 +9,12 @@ anthropic>=0.25.0
 # Terminal UI & Evaluation Formatting
 rich>=13.7.0
 
+# Web App & Streaming
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+sse-starlette>=2.1.0
+jinja2>=3.1.4
+python-multipart>=0.0.9
+
 # Testing
 pytest>=8.0.0

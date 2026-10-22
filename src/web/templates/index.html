@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thesis Engine — Research-to-Conviction Investment Memo Generator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            },
+            dark: {
+              900: '#090d16',
+              800: '#0f172a',
+              700: '#1e293b',
+              600: '#334155'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .prose h1 { @apply text-2xl font-bold text-slate-100 mt-6 mb-3 border-b border-slate-700 pb-2; }
+    .prose h2 { @apply text-xl font-semibold text-slate-200 mt-5 mb-2; }
+    .prose h3 { @apply text-lg font-medium text-slate-300 mt-4 mb-2; }
+    .prose p { @apply text-slate-300 my-2 leading-relaxed; }
+    .prose ul { @apply list-disc list-inside text-slate-300 my-2 space-y-1; }
+    .prose ol { @apply list-decimal list-inside text-slate-300 my-2 space-y-1; }
+    .prose blockquote { @apply border-l-4 border-emerald-500 pl-4 py-1 italic text-slate-400 my-3 bg-slate-800/40 rounded-r; }
+    .prose code { @apply bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm; }
+    .prose strong { @apply text-slate-100 font-semibold; }
+  </style>
+</head>
+<body class="bg-dark-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+
+  <!-- Navigation Bar -->
+  <header class="border-b border-slate-800 bg-dark-900/90 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
+          Δ
+        </div>
+        <div>
+          <span class="font-bold text-slate-100 tracking-tight text-lg">Thesis Engine</span>
+          <span class="text-xs text-slate-400 ml-2 hidden sm:inline px-2 py-0.5 bg-slate-800 rounded-full border border-slate-700">Minto & Adversarial Debate</span>
+        </div>
+      </div>
+      
+      <!-- Top Badges & BYOK Info -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="flex items-center text-slate-400 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
+          <span>Zero Server Storage</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Configuration & Inputs (5 cols on lg) -->
+    <div class="lg:col-span-5 space-y-6">
+      
+      <!-- Input Card -->
+      <div class="bg-dark-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-base font-semibold text-slate-100 mb-1 flex items-center">
+          <svg class="w-4 h-4 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Research Subject
+        </h2>
+        <p class="text-xs text-slate-400 mb-4">Enter a target company or research thesis topic.</p>
+
+        <!-- Topic Name -->
+        <div class="space-y-3 mb-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Topic / Company Name *</label>
+            <input 
+              type="text" 
+              id="topicInput" 
+              placeholder="e.g. SpaceX Starship Launch Cadence & Economics"
+              class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+            >
+          </div>
+        </div>
+
+        <!-- Dossier Mode Toggle -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-slate-300 mb-2">Research Dossier Source</label>
+          <div class="grid grid-cols-2 gap-2 bg-dark-900 p-1 rounded-xl border border-slate-700">
+            <button 
+              type="button" 
+              id="tabAutoSearch" 
+              onclick="setDossierTab('auto')"
+              class="py-2 text-xs font-medium rounded-lg transition bg-slate-800 text-emerald-400 shadow-sm"
+            >
+              🌐 Auto Web Search
+            </button>
+            <button 
+              type="button" 
+              id="tabCustomDossier" 
+              onclick="setDossierTab('custom')"
+              class="py-2 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200"
+            >
+              📄 Paste / Upload
+            </button>
+          </div>
+        </div>
+
+        <!-- Auto Search Explainer -->
+        <div id="autoSearchBox" class="p-3.5 bg-emerald-950/20 border border-emerald-900/50 rounded-xl text-xs text-emerald-300/90 leading-relaxed mb-4">
+          <div class="font-medium mb-1 flex items-center text-emerald-300">
+            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Automated Google Search Grounding
+          </div>
+          Gemini will execute live search queries, extract recent empirical metrics, financials, and quotes, and compile a structured research packet before memo synthesis.
+        </div>
+
+        <!-- Custom Dossier Input Area -->
+        <div id="customDossierBox" class="hidden space-y-3 mb-4">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-medium text-slate-300">Custom Research Text</label>
+            <label class="text-[11px] text-emerald-400 hover:text-emerald-300 cursor-pointer">
+              Upload file (.txt, .md)
+              <input type="file" id="dossierFileInput" accept=".txt,.md" class="hidden" onchange="handleFileUpload(event)">
+            </label>
+          </div>
+          <textarea 
+            id="dossierTextInput" 
+            rows="6" 
+            placeholder="Paste your raw research findings, earnings transcripts, SEC filings, or analyst notes here..."
+            class="w-full bg-dark-900 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 font-mono placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition leading-normal"
+          ></textarea>
+        </div>
+
+        <!-- Model Choice Section -->
+        <div class="pt-3 border-t border-slate-700/60 mb-5">
+          <label class="block text-xs font-medium text-slate-300 mb-2">Inference Engine</label>
+          <div class="grid grid-cols-2 gap-3">
+            
+            <!-- Gemini Card -->
+            <label class="relative flex flex-col p-3 rounded-xl border border-slate-700 bg-dark-900 cursor-pointer hover:border-slate-600 transition" id="modelGeminiCard">
+              <input type="radio" name="modelRadio" value="gemini" checked onchange="handleModelChange('gemini')" class="sr-only">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-slate-100">Google Gemini</span>
+                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20 font-medium">Free</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Gemini 3.8 / 3.5 Flash with search tools</p>
+            </label>
+
+            <!-- Claude Card -->
+            <label class="relative flex flex-col p-3 rounded-xl border border-slate-700 bg-dark-900 cursor-pointer hover:border-slate-600 transition" id="modelClaudeCard">
+              <input type="radio" name="modelRadio" value="claude" onchange="handleModelChange('claude')" class="sr-only">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-slate-100">Anthropic Claude</span>
+                <span class="text-[10px] bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/20 font-medium">Sonnet 3.5</span>
+              </div>
+              <p class="text-[11px] text-slate-400">BYOK or 3 free prompt allowance</p>
+            </label>
+          </div>
+        </div>
+
+        <!-- Claude Mode Sub-Panel (Appears if Claude is chosen) -->
+        <div id="claudeSubPanel" class="hidden p-4 bg-purple-950/20 border border-purple-900/40 rounded-xl space-y-3 mb-5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-purple-300">Claude Access Mode</span>
+            <div class="space-x-3">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="claudeAuthMode" value="free" checked onchange="toggleClaudeAuthMode('free')" class="text-purple-600 focus:ring-0">
+                <span class="ml-1.5 text-xs text-slate-300">Free Tier (3 Runs)</span>
+              </label>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="claudeAuthMode" value="byok" onchange="toggleClaudeAuthMode('byok')" class="text-purple-600 focus:ring-0">
+                <span class="ml-1.5 text-xs text-slate-300">My API Key</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Free Claude Form -->
+          <div id="claudeFreeForm" class="space-y-2">
+            <label class="block text-[11px] text-slate-400">Enter email to claim free runs:</label>
+            <div class="flex space-x-2">
+              <input 
+                type="email" 
+                id="userEmailInput" 
+                placeholder="investor@fund.com"
+                class="flex-1 bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                onchange="refreshQuota()"
+              >
+              <button 
+                type="button" 
+                onclick="refreshQuota()" 
+                class="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs rounded-lg hover:bg-slate-700 transition"
+              >
+                Check
+              </button>
+            </div>
+            <div id="quotaBadge" class="text-[11px] text-slate-400 flex items-center">
+              <span>Allowance: 3 free memos</span>
+            </div>
+          </div>
+
+          <!-- BYOK Claude Form -->
+          <div id="claudeByokForm" class="hidden space-y-2">
+            <label class="block text-[11px] text-slate-400">Anthropic API Key:</label>
+            <input 
+              type="password" 
+              id="userClaudeKeyInput" 
+              placeholder="sk-ant-api03-..."
+              class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 font-mono"
+            >
+          </div>
+
+          <!-- Stateless Guarantee Notice -->
+          <div class="text-[11px] text-purple-300/80 flex items-start pt-1">
+            <svg class="w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <span><strong>Stateless Guarantee:</strong> Your API key is held only in browser memory and passed directly via secure SSL headers. It is never logged or stored on our servers.</span>
+          </div>
+        </div>
+
+        <!-- Optional Gemini BYOK (Accordion) -->
+        <div class="mb-5">
+          <button 
+            type="button" 
+            onclick="document.getElementById('geminiByokBox').classList.toggle('hidden')" 
+            class="text-[11px] text-slate-400 hover:text-slate-200 flex items-center transition"
+          >
+            <span class="mr-1">⚙️ Custom Gemini API Key (Optional)</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <div id="geminiByokBox" class="hidden mt-2 p-3 bg-dark-900 rounded-xl border border-slate-700 space-y-1">
+            <label class="block text-[11px] text-slate-400">Custom Google AI Studio Key (bypasses shared rate limits):</label>
+            <input 
+              type="password" 
+              id="userGeminiKeyInput" 
+              placeholder="AIzaSy..."
+              class="w-full bg-dark-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+            >
+          </div>
+        </div>
+
+        <!-- Run Action Button -->
+        <button 
+          type="button" 
+          id="btnGenerate" 
+          onclick="startGeneration()" 
+          class="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-dark-900 font-semibold rounded-xl text-sm flex items-center justify-center space-x-2 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span>Generate Investment Memo</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Pipeline Stepper & Final Output (7 cols on lg) -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- Pipeline Execution Live Stepper -->
+      <div id="stepperCard" class="hidden bg-dark-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl transition-all">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/60">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-100 flex items-center">
+              <span id="spinnerPulse" class="w-2.5 h-2.5 rounded-full bg-emerald-400 mr-2.5 animate-ping"></span>
+              Pipeline Execution Monitor
+            </h3>
+            <p id="liveStatusText" class="text-xs text-slate-400 mt-0.5">Initializing pipeline environment...</p>
+          </div>
+          <span id="stepProgressBadge" class="text-xs font-mono bg-slate-900 px-2.5 py-1 rounded-full border border-slate-700 text-emerald-400">
+            Stage 1 / 4
+          </span>
+        </div>
+
+        <!-- Stage Timeline Steps -->
+        <div class="space-y-3.5 text-xs">
+          <!-- Step 0 (Web Research) -->
+          <div id="stepItem0" class="hidden flex items-start space-x-3 p-2.5 rounded-xl border border-slate-800 bg-dark-900/40">
+            <div id="stepDot0" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5">0</div>
+            <div class="flex-1">
+              <div class="font-medium text-slate-200">Grounded Web Research & Dossier Synthesis</div>
+              <div id="stepDetail0" class="text-slate-400 text-[11px] mt-0.5">Querying Google Search for empirical metrics and recent filings...</div>
+            </div>
+          </div>
+
+          <!-- Step 1 (Claim Extraction) -->
+          <div id="stepItem1" class="flex items-start space-x-3 p-2.5 rounded-xl border border-slate-800 bg-dark-900/40">
+            <div id="stepDot1" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5">1</div>
+            <div class="flex-1">
+              <div class="font-medium text-slate-200">Atomic Claims Extraction & Verbatim Verification</div>
+              <div id="stepDetail1" class="text-slate-400 text-[11px] mt-0.5">Deconstructing dossier into cited units (`fact`, `estimate`, `opinion`)...</div>
+            </div>
+          </div>
+
+          <!-- Step 2 (360 Theses & Pre-Mortem) -->
+          <div id="stepItem2" class="flex items-start space-x-3 p-2.5 rounded-xl border border-slate-800 bg-dark-900/40">
+            <div id="stepDot2" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5">2</div>
+            <div class="flex-1">
+              <div class="font-medium text-slate-200">360° Candidate Theses & Adversarial Pre-Mortem Debate</div>
+              <div id="stepDetail2" class="text-slate-400 text-[11px] mt-0.5">Formulating Buy/Conditional/Pass theses and running 3-year fatal failure critic...</div>
+            </div>
+          </div>
+
+          <!-- Step 3 (Minto Synthesis) -->
+          <div id="stepItem3" class="flex items-start space-x-3 p-2.5 rounded-xl border border-slate-800 bg-dark-900/40">
+            <div id="stepDot3" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5">3</div>
+            <div class="flex-1">
+              <div class="font-medium text-slate-200">Grounded Minto Pyramid Synthesis</div>
+              <div id="stepDetail3" class="text-slate-400 text-[11px] mt-0.5">Structuring Answer-First conviction, 3 pillars, and falsifiable triggers...</div>
+            </div>
+          </div>
+
+          <!-- Step 4 (Voice Pass & Traceability) -->
+          <div id="stepItem4" class="flex items-start space-x-3 p-2.5 rounded-xl border border-slate-800 bg-dark-900/40">
+            <div id="stepDot4" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5">4</div>
+            <div class="flex-1">
+              <div class="font-medium text-slate-200">Voice Editorial Pass & Hard Numerical Traceability</div>
+              <div id="stepDetail4" class="text-slate-400 text-[11px] mt-0.5">Linter de-slopping pass and 100% numerical verification against citations...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Candidate Theses Display Box -->
+        <div id="liveThesesBox" class="hidden mt-4 p-3 bg-dark-900 rounded-xl border border-slate-700/80 space-y-2 text-xs">
+          <div class="font-semibold text-slate-300">Generated Candidate Theses:</div>
+          <div id="thesesList" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+      <!-- Result Card (Hidden until complete) -->
+      <div id="resultCard" class="hidden bg-dark-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-4">
+        
+        <!-- Result Header & Badges -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-700/60">
+          <div>
+            <span class="text-xs text-slate-400 font-medium">Final Investment Deliverable</span>
+            <h2 id="resultTitle" class="text-lg font-bold text-slate-100">Executive Research & Decision Memo</h2>
+          </div>
+          
+          <!-- Quality Metric Badges -->
+          <div class="flex items-center space-x-2 text-xs">
+            <span id="badgeConviction" class="px-2.5 py-1 rounded-full font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              BUY
+            </span>
+            <span id="badgeTraceability" class="px-2.5 py-1 rounded-full font-medium bg-slate-900 text-slate-300 border border-slate-700">
+              100% Traceability
+            </span>
+            <span id="badgeSlop" class="px-2.5 py-1 rounded-full font-medium bg-slate-900 text-slate-300 border border-slate-700">
+              Slop Score: 0/100
+            </span>
+          </div>
+        </div>
+
+        <!-- Memo Content (Markdown Rendered) -->
+        <div id="memoMarkdownContainer" class="prose max-w-none text-slate-300 bg-dark-900/60 p-5 rounded-xl border border-slate-800 overflow-x-auto text-sm leading-relaxed max-h-[700px] overflow-y-auto">
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="flex items-center justify-between pt-3 border-t border-slate-700/60 text-xs">
+          <span class="text-slate-400">Numerical traceability enforced against verified claims.</span>
+          <div class="flex space-x-2">
+            <button 
+              type="button" 
+              onclick="copyMemo()" 
+              class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg transition flex items-center space-x-1.5"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              <span id="copyBtnText">Copy Markdown</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="downloadMemo()" 
+              class="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-medium rounded-lg transition flex items-center space-x-1.5"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              <span>Download (.md)</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Error Card (if any failure occurs) -->
+      <div id="errorCard" class="hidden p-5 bg-red-950/30 border border-red-800 rounded-2xl space-y-2">
+        <div class="flex items-center text-red-400 font-semibold text-sm">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Generation Alert
+        </div>
+        <p id="errorMessage" class="text-xs text-red-300 leading-relaxed"></p>
+      </div>
+
+      <!-- Welcome Placeholder Card -->
+      <div id="welcomePlaceholder" class="bg-dark-800/60 border border-slate-800 rounded-2xl p-8 text-center space-y-4">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xl">
+          Δ
+        </div>
+        <div class="max-w-md mx-auto space-y-2">
+          <h3 class="text-base font-semibold text-slate-200">Forensic Investment Conviction Engine</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Deconstructs unstructured research into atomic verifiable claims, forces LLMs to take non-hedging stances via 3-year adversarial pre-mortem debate, and enforces strict numerical traceability.
+          </p>
+        </div>
+        <div class="grid grid-cols-3 gap-3 text-left pt-2 text-xs">
+          <div class="p-3 bg-dark-900/60 rounded-xl border border-slate-800">
+            <div class="text-emerald-400 font-medium mb-1">Verbatim Claims</div>
+            <div class="text-[11px] text-slate-400">Quotes must match source dossier exactly or are purged.</div>
+          </div>
+          <div class="p-3 bg-dark-900/60 rounded-xl border border-slate-800">
+            <div class="text-emerald-400 font-medium mb-1">Pre-Mortem Critic</div>
+            <div class="text-[11px] text-slate-400">Assumes 80% loss in 3 years to stress-test conviction.</div>
+          </div>
+          <div class="p-3 bg-dark-900/60 rounded-xl border border-slate-800">
+            <div class="text-emerald-400 font-medium mb-1">Zero Slop</div>
+            <div class="text-[11px] text-slate-400">Deterministic linter rejects AI clichés and ungrounded numbers.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Client-side Logic -->
+  <script>
+    let activeDossierTab = 'auto';
+    let selectedModel = 'gemini';
+    let claudeAuthMode = 'free';
+    let currentFinalMemo = '';
+
+    // Generate or retrieve persistent browser device fingerprint
+    function getDeviceFingerprint() {
+      let fp = localStorage.getItem('thesis_device_fp');
+      if (!fp) {
+        fp = 'fp_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now().toString(36);
+        localStorage.setItem('thesis_device_fp', fp);
+      }
+      return fp;
+    }
+
+    function setDossierTab(tab) {
+      activeDossierTab = tab;
+      const tabAuto = document.getElementById('tabAutoSearch');
+      const tabCustom = document.getElementById('tabCustomDossier');
+      const autoBox = document.getElementById('autoSearchBox');
+      const customBox = document.getElementById('customDossierBox');
+
+      if (tab === 'auto') {
+        tabAuto.className = 'py-2 text-xs font-medium rounded-lg transition bg-slate-800 text-emerald-400 shadow-sm';
+        tabCustom.className = 'py-2 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200';
+        autoBox.classList.remove('hidden');
+        customBox.classList.add('hidden');
+      } else {
+        tabCustom.className = 'py-2 text-xs font-medium rounded-lg transition bg-slate-800 text-emerald-400 shadow-sm';
+        tabAuto.className = 'py-2 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200';
+        autoBox.classList.add('hidden');
+        customBox.classList.remove('hidden');
+      }
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('dossierTextInput').value = e.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    function handleModelChange(model) {
+      selectedModel = model;
+      const claudeSubPanel = document.getElementById('claudeSubPanel');
+      const geminiCard = document.getElementById('modelGeminiCard');
+      const claudeCard = document.getElementById('modelClaudeCard');
+
+      if (model === 'claude') {
+        claudeSubPanel.classList.remove('hidden');
+        claudeCard.classList.add('border-purple-500/60', 'bg-purple-950/10');
+        geminiCard.classList.remove('border-emerald-500/60', 'bg-emerald-950/10');
+        refreshQuota();
+      } else {
+        claudeSubPanel.classList.add('hidden');
+        geminiCard.classList.add('border-emerald-500/60', 'bg-emerald-950/10');
+        claudeCard.classList.remove('border-purple-500/60', 'bg-purple-950/10');
+      }
+    }
+
+    function toggleClaudeAuthMode(mode) {
+      claudeAuthMode = mode;
+      const freeForm = document.getElementById('claudeFreeForm');
+      const byokForm = document.getElementById('claudeByokForm');
+      if (mode === 'free') {
+        freeForm.classList.remove('hidden');
+        byokForm.classList.add('hidden');
+      } else {
+        freeForm.classList.add('hidden');
+        byokForm.classList.remove('hidden');
+      }
+    }
+
+    async function refreshQuota() {
+      const email = document.getElementById('userEmailInput').value.trim();
+      const badge = document.getElementById('quotaBadge');
+      if (!email) {
+        badge.innerHTML = `<span class="text-slate-400">Enter email to view free prompt balance.</span>`;
+        return;
+      }
+      try {
+        const fp = getDeviceFingerprint();
+        const res = await fetch(`/api/quota?email=${encodeURIComponent(email)}&fingerprint=${encodeURIComponent(fp)}`);
+        const data = await res.json();
+        if (data.allowed) {
+          badge.innerHTML = `<span class="text-emerald-400 font-semibold">✓ ${data.remaining} of ${data.max} free runs remaining</span>`;
+        } else {
+          badge.innerHTML = `<span class="text-amber-400 font-medium">⚠️ 0 of ${data.max} free runs remaining (${data.reason || 'Limit reached'})</span>`;
+        }
+      } catch (err) {
+        badge.innerHTML = `<span class="text-slate-500">Quota status unavailable</span>`;
+      }
+    }
+
+    function highlightStage(stepIndex) {
+      for (let i = 0; i <= 4; i++) {
+        const dot = document.getElementById(`stepDot${i}`);
+        if (!dot) continue;
+        if (i < stepIndex) {
+          dot.className = "w-5 h-5 rounded-full bg-emerald-500 text-dark-900 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5";
+          dot.innerHTML = "✓";
+        } else if (i === stepIndex) {
+          dot.className = "w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-400 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 animate-pulse";
+          dot.innerHTML = `${i}`;
+        } else {
+          dot.className = "w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5";
+          dot.innerHTML = `${i}`;
+        }
+      }
+    }
+
+    async function startGeneration() {
+      const topic = document.getElementById('topicInput').value.trim();
+      if (!topic) {
+        alert("Please enter a topic or company name.");
+        return;
+      }
+
+      let dossierText = null;
+      if (activeDossierTab === 'custom') {
+        dossierText = document.getElementById('dossierTextInput').value.trim();
+        if (!dossierText) {
+          alert("Please paste your research text or switch to 'Auto Web Search'.");
+          return;
+        }
+      }
+
+      const userEmail = document.getElementById('userEmailInput').value.trim();
+      const userClaudeKey = document.getElementById('userClaudeKeyInput').value.trim();
+      const userGeminiKey = document.getElementById('userGeminiKeyInput').value.trim();
+
+      if (selectedModel === 'claude' && claudeAuthMode === 'free' && !userEmail) {
+        alert("Please enter your email to claim the free Claude tier runs.");
+        return;
+      }
+
+      // UI State Transition
+      document.getElementById('btnGenerate').disabled = true;
+      document.getElementById('errorCard').classList.add('hidden');
+      document.getElementById('welcomePlaceholder').classList.add('hidden');
+      document.getElementById('resultCard').classList.add('hidden');
+      document.getElementById('stepperCard').classList.remove('hidden');
+
+      // Check if web research step applies
+      const stepItem0 = document.getElementById('stepItem0');
+      if (activeDossierTab === 'auto') {
+        stepItem0.classList.remove('hidden');
+        highlightStage(0);
+        document.getElementById('stepProgressBadge').textContent = "Stage 0 / 4";
+        document.getElementById('liveStatusText').textContent = "Conducting live web research with Google Search...";
+      } else {
+        stepItem0.classList.add('hidden');
+        highlightStage(1);
+        document.getElementById('stepProgressBadge').textContent = "Stage 1 / 4";
+        document.getElementById('liveStatusText').textContent = "Extracting grounded claims from provided dossier...";
+      }
+
+      const payload = {
+        topic: topic,
+        company_name: topic,
+        dossier_text: dossierText,
+        model_choice: selectedModel,
+        user_gemini_key: userGeminiKey || null,
+        user_claude_key: (selectedModel === 'claude' && claudeAuthMode === 'byok') ? userClaudeKey : null,
+        user_email: (selectedModel === 'claude' && claudeAuthMode === 'free') ? userEmail : null,
+        fingerprint: getDeviceFingerprint(),
+        enable_debate: true,
+        enable_voice: true
+      };
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data:')) continue;
+            
+            const rawData = trimmed.replace(/^data:\s*/, '');
+            try {
+              const event = JSON.parse(rawData);
+              handlePipelineEvent(event);
+            } catch (parseErr) {
+              // Ignore partial JSON ping
+            }
+          }
+        }
+
+      } catch (err) {
+        showError(err.message || "Failed to communicate with pipeline server.");
+      } finally {
+        document.getElementById('btnGenerate').disabled = false;
+      }
+    }
+
+    function handlePipelineEvent(event) {
+      if (event.event === 'ping') return;
+
+      if (event.event === 'error') {
+        showError(event.message);
+        return;
+      }
+
+      if (event.event === 'progress') {
+        const step = event.step;
+        highlightStage(step);
+        document.getElementById('stepProgressBadge').textContent = `Stage ${step} / 4`;
+        document.getElementById('liveStatusText').textContent = event.message;
+
+        if (event.stage_key === 'theses_done' && event.data && event.data.theses) {
+          const thesesBox = document.getElementById('liveThesesBox');
+          const list = document.getElementById('thesesList');
+          list.innerHTML = '';
+          event.data.theses.forEach(t => {
+            const item = document.createElement('div');
+            item.className = 'p-2 bg-slate-800/80 rounded border border-slate-700 text-slate-200';
+            item.innerHTML = `<span class="font-bold text-emerald-400">[${t.stance}]</span> ${t.headline}`;
+            list.appendChild(item);
+          });
+          thesesBox.classList.remove('hidden');
+        }
+      }
+
+      if (event.event === 'complete') {
+        highlightStage(4);
+        const data = event.data;
+        currentFinalMemo = data.final_memo;
+
+        // Render Markdown Memo
+        document.getElementById('memoMarkdownContainer').innerHTML = marked.parse(data.final_memo);
+        document.getElementById('resultTitle').textContent = `Investment Memo: ${data.company_name}`;
+
+        // Set Badges
+        const convictionBadge = document.getElementById('badgeConviction');
+        if (data.final_memo.includes("BUY")) {
+          convictionBadge.textContent = "BUY";
+          convictionBadge.className = "px-2.5 py-1 rounded-full font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+        } else if (data.final_memo.includes("PASS")) {
+          convictionBadge.textContent = "PASS";
+          convictionBadge.className = "px-2.5 py-1 rounded-full font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30";
+        } else {
+          convictionBadge.textContent = "CONDITIONAL";
+          convictionBadge.className = "px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30";
+        }
+
+        document.getElementById('badgeSlop').textContent = `Slop: ${data.slop_score.toFixed(1)}/100`;
+        document.getElementById('badgeTraceability').textContent = data.traceability_passed ? "✓ 100% Traceability" : "⚠️ Traceability Flagged";
+
+        // Display Result Card
+        document.getElementById('resultCard').classList.remove('hidden');
+        document.getElementById('stepperCard').classList.add('hidden');
+
+        // Scroll to result smoothly
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('errorCard').classList.remove('hidden');
+      document.getElementById('errorMessage').textContent = msg;
+      document.getElementById('stepperCard').classList.add('hidden');
+    }
+
+    function copyMemo() {
+      if (!currentFinalMemo) return;
+      navigator.clipboard.writeText(currentFinalMemo);
+      const btn = document.getElementById('copyBtnText');
+      btn.textContent = "Copied to clipboard!";
+      setTimeout(() => { btn.textContent = "Copy Markdown"; }, 2000);
+    }
+
+    function downloadMemo() {
+      if (!currentFinalMemo) return;
+      const topic = document.getElementById('topicInput').value.trim() || 'investment_memo';
+      const filename = `${topic.toLowerCase().replace(/[^a-z0-9]/g, '_')}_memo.md`;
+      const blob = new Blob([currentFinalMemo], { type: 'text/markdown;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+</body>
+</html>
