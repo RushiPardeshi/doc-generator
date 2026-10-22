@@ -196,7 +196,7 @@ def run_pipeline(
                 {
                     "slop_score": lint_result.slop_score,
                     "traceability_passed": traceability.is_valid,
-                    "untraced_count": len(traceability.untraced_numbers),
+                    "untraced_count": len(traceability.untraced_metrics),
                 }
             )
     else:

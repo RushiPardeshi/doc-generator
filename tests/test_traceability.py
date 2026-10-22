@@ -42,6 +42,7 @@ def test_traceability_passes_with_verified_metrics(sample_claims):
     report = verify_numerical_traceability(memo, sample_claims)
     assert report.is_valid is True
     assert len(report.untraced_metrics) == 0
+    assert report.untraced_numbers == report.untraced_metrics
 
 
 def test_traceability_fails_with_invented_metrics(sample_claims):

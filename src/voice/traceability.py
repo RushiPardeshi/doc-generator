@@ -15,6 +15,11 @@ class TraceabilityReport(BaseModel):
     untraced_metrics: List[str]
     error_message: Optional[str] = None
 
+    @property
+    def untraced_numbers(self) -> List[str]:
+        """Backward compatibility alias for untraced_metrics."""
+        return self.untraced_metrics
+
 
 # Pattern targeting financial figures, scientific/engineering metrics, percentages, multipliers, and multi-digit counts
 METRIC_PATTERN = re.compile(

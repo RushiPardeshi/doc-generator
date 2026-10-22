@@ -183,3 +183,27 @@ def test_end_to_end_pipeline_execution():
     assert result.traceability_report.is_valid is True
     assert result.lint_result.is_acceptable is True
     assert "Investment Memo: Apex Systems" in result.final_memo
+
+
+def test_pipeline_execution_with_progress_callback():
+    from pathlib import Path
+    dossier_text = Path("data/dossiers/apex_observability_2019.md").read_text()
+    provider = MockLLMProvider()
+
+    events = []
+
+    def callback(stage_key, message, step, total_steps, data):
+        events.append((stage_key, message, step, total_steps, data))
+
+    result = run_pipeline(
+        dossier_text=dossier_text,
+        provider=provider,
+        config=PipelineConfig(company_name="Apex Systems", enable_debate=True, enable_voice=True),
+        progress_callback=callback,
+    )
+
+    assert result.company_name == "Apex Systems"
+    voice_done_events = [e for e in events if e[0] == "voice_done"]
+    assert len(voice_done_events) == 1
+    assert "untraced_count" in voice_done_events[0][4]
+    assert voice_done_events[0][4]["untraced_count"] == 0
