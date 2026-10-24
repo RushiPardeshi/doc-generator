@@ -34,15 +34,25 @@ class MintoDraft(BaseModel):
     )
 
 
-MINTO_SYNTHESIZER_SYSTEM = """You are an elite research director and analytical decision-maker drafting an Executive Research & Decision Memo.
-You write according to Barbara Minto's Pyramid Principle: ANSWER-FIRST, followed by exactly 3 supporting pillars, unvarnished structural risks, and falsification criteria.
+MINTO_SYNTHESIZER_SYSTEM = """You are an elite research director and analytical thinker drafting an Executive Research Synthesis & Thesis.
+You write according to Barbara Minto's Pyramid Principle: ANSWER-FIRST, followed by exactly 3 supporting pillars, structural limits/trade-offs, and falsification criteria.
 
 CRITICAL INVARIANTS:
-1. ANSWER-FIRST: Paragraph 1 is the core conclusion/decision (RECOMMEND/BUY, CONDITIONAL, or REJECT/PASS) and the central thesis. Do NOT start with historical throat-clearing or summary padding.
-2. CITATION DISCIPLINE: Every single supporting pillar MUST cite relevant Claim IDs (e.g. [C1], [C5]) and utilize only the verified metrics and empirical evidence provided in those claims.
-3. ZERO INVENTED NUMBERS: Every measurement, number, percentage, and metric you write MUST originate from the cited claims. Never fabricate benchmark metrics or estimates.
-4. FALSIFICATION TRIGGERS: 'What Would Change My Mind' must define quantifiable triggers anchored to the claims (e.g., 'If metric X degrades from Y below Z [C#]').
-5. REJECT/PASS HANDLING: If the conclusion is REJECT or PASS, the 3 pillars must detail why the subject/hypothesis is structurally unviable or fatally vulnerable to the pre-mortem failure mode.
+1. ANSWER-FIRST: Paragraph 1 is the core finding and central thesis. Do NOT start with historical throat-clearing, introductory padding, or generic definitions.
+2. RESEARCH FOCUS (NO ARTIFICIAL PROCUREMENT DECISIONS):
+   - For pure research subjects (scientific models, ML architectures like LIIF, technologies, concepts), focus strictly on synthesizing the research: what is the core mechanism, what do benchmarks prove, what are the structural constraints, and what is the operating envelope?
+   - Do NOT pretend to make an IT deployment, enterprise adoption, or stock purchase decision unless specifically instructed.
+3. CITATION DISCIPLINE: Every single supporting pillar MUST cite relevant Claim IDs (e.g. [C1], [C5]) and utilize only the verified metrics and empirical evidence provided in those claims.
+4. ZERO INVENTED NUMBERS: Every measurement, number, percentage, and metric you write MUST originate from the cited claims. Never fabricate benchmark metrics or estimates.
+5. FALSIFICATION TRIGGERS: 'What Would Change My Mind' (or Falsification Boundaries) must define quantifiable triggers anchored to the claims (e.g., 'If metric X degrades from Y below Z [C#]').
+6. SCANNABLE MARKDOWN & AMPLE NEWLINES:
+   - Always put a blank line (double newline) after every topic, heading, sub-heading, and bullet item.
+   - Break arguments into short, digestible paragraphs (maximum 2-3 sentences each) separated by double newlines. Never write unbroken walls of text.
+   - Format multi-point conditions, guardrails, or failure triggers as clean markdown bullet lists with bold lead-ins (e.g., '- **Constraint Name**: details [C#]'), NEVER as run-on inline sentences like '(1) X, (2) Y, (3) Z'.
+   - When contrasting quantitative figures across operational regimes (e.g. Baseline vs. Accelerated vs. Degraded), present the comparison in a clean markdown table.
+7. PLAIN LANGUAGE & CAUSAL CLARITY:
+   - State findings, unit economics, and failure modes in plain, direct English. Avoid dense buzzwords and pretentious financial shorthand.
+   - Ground abstract concepts in concrete operational realities (e.g., explain what happens to money, customers, or systems rather than writing "the contribution margin is structurally fragile" or "exhibits asymmetric downside vector").
 """
 
 
@@ -53,6 +63,7 @@ def synthesize_minto_draft(
     debate_result: DebateArbitrationResult,
     claims: List[GroundedClaim],
     provider: LLMProvider,
+    mode: str = "research",
 ) -> MintoDraft:
     """Synthesize a structured Minto Pyramid draft memo from debate results and verified claims."""
     claims_text = "\n".join(
@@ -68,7 +79,7 @@ def synthesize_minto_draft(
             f"Primary Vulnerability: {selected_thesis.primary_vulnerability}\n"
         )
     else:
-        thesis_info = "All candidate theses failed the adversarial pre-mortem. Synthesize an unvarnished REJECT / PASS memo.\n"
+        thesis_info = "All candidate theses failed the adversarial critique. Synthesize an unvarnished skeptical/refuted thesis.\n"
 
     premortem_summary = debate_result.arbitration_summary
     fatal_flaws = []
@@ -77,7 +88,21 @@ def synthesize_minto_draft(
         fatal_flaws.extend(attack.fatal_flaws)
         falsification_hints.extend(attack.falsification_triggers)
 
-    prompt = f"""Draft a Minto Pyramid Research & Decision Memo for {company_name}.
+    if mode == "research":
+        prompt = f"""Synthesize an Answer-First Research Synthesis & Thesis for {company_name}.
+Focus on the core technical mechanism, empirical benchmark results, structural constraints, and falsification boundaries. Do NOT frame this as an IT procurement, business purchase, or deploy/reject decision.
+
+SYNTHESIS STATUS: {stance.value}
+{thesis_info}
+CRITIQUE / PRE-MORTEM SUMMARY: {premortem_summary}
+EXPOSED STRUCTURAL LIMITS / BOTTLENECKS: {', '.join(fatal_flaws[:5])}
+CANDIDATE FALSIFICATION TRIGGERS: {', '.join(falsification_hints[:5])}
+
+VERIFIED CLAIMS (USE THESE EXACT METRICS AND CITE IDS [C#]):
+{claims_text}
+"""
+    else:
+        prompt = f"""Draft a Minto Pyramid Research & Decision Memo for {company_name}.
 
 DECISION / STANCE: {stance.value}
 {thesis_info}
@@ -97,36 +122,63 @@ VERIFIED CLAIMS (USE THESE EXACT METRICS AND CITE IDS [C#]):
     return draft
 
 
-def format_minto_to_markdown(draft: MintoDraft) -> str:
-    """Format a MintoDraft object into clean, human-readable markdown prose."""
+def format_minto_to_markdown(draft: MintoDraft, mode: str = "research") -> str:
+    """Format a MintoDraft object into clean, human-readable markdown prose with strict newline discipline."""
+    if mode == "research":
+        title_header = f"# Research Synthesis & Thesis: {draft.company_name}"
+        status_line = f"**Synthesis Status**: `{draft.recommendation.value}`"
+        section1_title = "## 1. Executive Research Thesis (Answer-First)"
+        section2_title = "## 2. Core Empirical Findings & Architectural Pillars"
+        section3_title = "## 3. Structural Limits, Trade-Offs & Bottlenecks"
+        section4_title = "## 4. Falsification Boundaries & Open Questions"
+    else:
+        title_header = f"# Executive Research & Decision Memo: {draft.company_name}"
+        status_line = f"**Conclusion / Recommendation**: `{draft.recommendation.value}`"
+        section1_title = "## 1. Executive Thesis (Answer-First)"
+        section2_title = "## 2. Supporting Strategic / Empirical Pillars"
+        section3_title = "## 3. Structural Risks & Pre-Mortem Failure Modes"
+        section4_title = "## 4. What Would Change My Mind (Falsification Criteria)"
+
     lines = [
-        f"# Executive Research & Decision Memo: {draft.company_name}",
-        f"**Conclusion / Recommendation**: `{draft.recommendation.value}`",
+        title_header,
         "",
-        "## 1. Executive Thesis (Answer-First)",
+        status_line,
+        "",
+        section1_title,
+        "",
         draft.executive_thesis,
         "",
-        "## 2. Supporting Strategic / Empirical Pillars",
+        section2_title,
+        "",
         f"### Pillar 1: {draft.pillar_1.headline}",
+        "",
         draft.pillar_1.argument,
+        "",
         f"*Citations: {', '.join(f'[{cid}]' for cid in draft.pillar_1.cited_claim_ids)}*",
         "",
         f"### Pillar 2: {draft.pillar_2.headline}",
+        "",
         draft.pillar_2.argument,
+        "",
         f"*Citations: {', '.join(f'[{cid}]' for cid in draft.pillar_2.cited_claim_ids)}*",
         "",
         f"### Pillar 3: {draft.pillar_3.headline}",
+        "",
         draft.pillar_3.argument,
+        "",
         f"*Citations: {', '.join(f'[{cid}]' for cid in draft.pillar_3.cited_claim_ids)}*",
         "",
-        "## 3. Structural Risks & Pre-Mortem Failure Modes",
+        section3_title,
+        "",
     ]
     for risk in draft.key_risks:
         lines.append(f"- {risk}")
+        lines.append("")
 
+    lines.append(section4_title)
     lines.append("")
-    lines.append("## 4. What Would Change My Mind (Falsification Criteria)")
     for trigger in draft.what_would_change_my_mind:
         lines.append(f"- {trigger}")
+        lines.append("")
 
-    return "\n".join(lines)
+    return "\n".join(lines).strip()

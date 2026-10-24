@@ -13,9 +13,9 @@ REQUIRED STRUCTURE (Minto's Pyramid Principle):
 4. What Would Change My Mind: Quantitative or empirical falsification triggers that would immediately invalidate your thesis.
 
 WRITING STYLE DIRECTIVE:
-- Write with high conviction and active verbs.
+- Write with high conviction, active verbs, and plain-English clarity.
 - Ground every claim in specific metrics and empirical facts from the text.
-- Avoid throat-clearing openings and conversational filler.
+- Avoid throat-clearing openings, conversational filler, and dense consultant/Wall Street jargon (e.g. explain practical business realities directly rather than using phrases like "structurally fragile margins").
 - Do NOT use AI clichés such as "not only X, but also Y", "testament to", "delve", "landscape", "poised to", or "tapestry".
 - Minimize em-dashes and avoid symmetrical rule-of-three triplets.
 

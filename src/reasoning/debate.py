@@ -9,11 +9,15 @@ from src.llm.base import LLMProvider
 
 
 class ThesisStance(str, Enum):
-    """Actionable stance of a proposed thesis or conclusion across any analytical domain."""
+    """Actionable stance of a proposed thesis or conclusion across analytical domains."""
+    # Research mode stances:
+    VALIDATED = "VALIDATED"          # Strong empirical grounding / Hypothesis supported / Efficacy proven
+    CONSTRAINED = "CONSTRAINED"      # Holds within defined operational boundaries / Trade-offs required
+    DISCONFIRMED = "DISCONFIRMED"    # Structural failure / Hypothesis unproven / Bottlenecks dominate
+    # Investment / Decision mode aliases:
     RECOMMEND = "RECOMMEND"        # Strong conviction positive thesis / Buy / Adopt / Validate
     CONDITIONAL = "CONDITIONAL"    # Viable only with strict caveats, margin of safety, or specific conditions
     REJECT = "REJECT"              # Fatal flaw / Refute / Unviable / Pass / Avoid
-    # Aliases for financial/investment runs:
     BUY = "BUY"
     PASS = "PASS"
 
@@ -106,14 +110,27 @@ RULES:
 def generate_candidate_theses(
     claims: List[GroundedClaim],
     provider: LLMProvider,
+    mode: str = "research",
 ) -> List[CandidateThesis]:
-    """Propose 3 orthogonal candidate theses (RECOMMEND/BUY, CONDITIONAL, REJECT/PASS) based on verified claims."""
+    """Propose 3 orthogonal candidate theses based on verified claims."""
     claims_summary = "\n".join(
         f"[{c.id}] ({c.claim_type.value}): {c.statement}" + (f" | Metric: {c.metric_or_data}" if c.metric_or_data else "")
         for c in claims
     )
 
-    prompt = f"""Based on the following verified claims, generate 3 orthogonal candidate theses (1 RECOMMEND/BUY, 1 CONDITIONAL, 1 REJECT/PASS).
+    if mode == "research":
+        prompt = f"""Based on the following verified claims, generate 3 orthogonal candidate research theses:
+1. One VALIDATED thesis (the core mechanism is theoretically sound and empirically proven by benchmark data)
+2. One CONSTRAINED thesis (valid within a specific operating envelope or parameter range; exhibits clear trade-offs/bottlenecks)
+3. One DISCONFIRMED thesis (fundamental structural limitations, scaling collapse, or unviable trade-offs dominate)
+
+Do NOT output corporate 'buy/deploy' investment stances. Use VALIDATED, CONSTRAINED, or DISCONFIRMED.
+
+VERIFIED CLAIMS:
+{claims_summary}
+"""
+    else:
+        prompt = f"""Based on the following verified claims, generate 3 orthogonal candidate theses (1 RECOMMEND/BUY, 1 CONDITIONAL, 1 REJECT/PASS).
 
 VERIFIED CLAIMS:
 {claims_summary}
@@ -131,6 +148,7 @@ def run_premortem_debate(
     theses: List[CandidateThesis],
     claims: List[GroundedClaim],
     provider: LLMProvider,
+    mode: str = "research",
 ) -> DebateArbitrationResult:
     """Run adversarial pre-mortem attacks on all 3 candidate theses and select the survivor."""
     claims_map = {c.id: c for c in claims}
@@ -144,7 +162,20 @@ def run_premortem_debate(
         for t in theses
     )
 
-    prompt = f"""Conduct an adversarial pre-mortem attack on each of the 3 candidate theses below.
+    if mode == "research":
+        prompt = f"""Conduct an adversarial pre-mortem critique on each of the 3 candidate research theses below to identify hidden assumptions, edge cases, and real-world bottlenecks.
+
+CANDIDATE THESES:
+{theses_text}
+
+Deliver:
+1. A rigorous failure/bottleneck narrative for each thesis.
+2. A survival score (1.0 to 10.0) and whether the core thesis holds.
+3. Concrete falsification triggers based on the claims.
+4. An overall arbitration decision selecting the most empirically sound thesis stance (VALIDATED, CONSTRAINED, or DISCONFIRMED). Do NOT force corporate procurement or deploy decisions.
+"""
+    else:
+        prompt = f"""Conduct an adversarial pre-mortem attack on each of the 3 candidate theses below.
 
 CANDIDATE THESES:
 {theses_text}

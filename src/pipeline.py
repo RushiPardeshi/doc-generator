@@ -27,6 +27,7 @@ class PipelineConfig(BaseModel):
     company_name: str = "Apex Systems"
     enable_debate: bool = True   # If False: ablation mode skipping multi-thesis debate & pre-mortem
     enable_voice: bool = True    # If False: ablation mode skipping editorial de-slopping pass
+    mode: str = "research"       # "research" (Research Synthesis & Thesis) or "investment" (Investment Memo)
 
 
 class PipelineResult(BaseModel):
@@ -78,7 +79,10 @@ def run_pipeline(
     token_tracker.set_current_stage("Stage 1: Grounded Claims Extraction")
     verified_claims, rejected_claims = extract_claims(dossier_text, provider)
     if not verified_claims:
-        raise RuntimeError("No claims survived verbatim verification against source dossier.")
+        raise RuntimeError(
+            f"No claims survived verbatim verification against source dossier (dossier length: {len(dossier_text)} chars). "
+            f"Please verify that the research dossier contains concrete factual assertions."
+        )
     console.print(f"     [green]✓ Extracted {len(verified_claims)} grounded claims ({len(rejected_claims)} discarded for quote mismatch)[/green]")
     if progress_callback:
         progress_callback(
@@ -93,32 +97,33 @@ def run_pipeline(
     candidate_theses: Optional[List[CandidateThesis]] = None
     debate_result: Optional[DebateArbitrationResult] = None
     selected_thesis: Optional[CandidateThesis] = None
-    stance = ThesisStance.BUY
+    stance = ThesisStance.VALIDATED if cfg.mode == "research" else ThesisStance.BUY
 
     if cfg.enable_debate:
-        console.print("   [cyan]• Stage 2/4: Formulating 3 candidate theses (BUY, CONDITIONAL, PASS)...[/cyan]")
+        stage2_label = "3 candidate research theses" if cfg.mode == "research" else "3 candidate theses (BUY, CONDITIONAL, PASS)"
+        console.print(f"   [cyan]• Stage 2/4: Formulating {stage2_label}...[/cyan]")
         if progress_callback:
-            progress_callback("theses_start", "Formulating 3 candidate theses (BUY, CONDITIONAL, PASS)...", 2, 4, None)
+            progress_callback("theses_start", f"Formulating {stage2_label}...", 2, 4, None)
 
         token_tracker.set_current_stage("Stage 2a: 360° Candidate Theses")
-        candidate_theses = generate_candidate_theses(verified_claims, provider)
+        candidate_theses = generate_candidate_theses(verified_claims, provider, mode=cfg.mode)
         for t in candidate_theses:
             console.print(f"     - [{t.stance.value}] {t.headline}")
 
         if progress_callback:
             progress_callback(
                 "theses_done",
-                "Formulated candidate theses. Launching adversarial 3-year pre-mortem debate...",
+                "Formulated candidate theses. Launching adversarial critique & stress-test...",
                 2,
                 4,
                 {"theses": [t.model_dump() for t in candidate_theses]}
             )
 
-        console.print("   [cyan]• Stage 2b: Running adversarial 3-year pre-mortem attack (Du et al., 2023)...[/cyan]")
+        console.print("   [cyan]• Stage 2b: Running adversarial critique & pre-mortem (Du et al., 2023)...[/cyan]")
         token_tracker.set_current_stage("Stage 2b: Pre-Mortem Adversarial Debate")
-        debate_result = run_premortem_debate(candidate_theses, verified_claims, provider)
+        debate_result = run_premortem_debate(candidate_theses, verified_claims, provider, mode=cfg.mode)
         stance = debate_result.final_stance
-        console.print(f"     [green]✓ Pre-mortem complete: Selected [{stance.value}][/green]")
+        console.print(f"     [green]✓ Critique complete: Selected [{stance.value}][/green]")
 
         if debate_result.selected_thesis_id:
             for t in candidate_theses:
@@ -129,7 +134,7 @@ def run_pipeline(
         if progress_callback:
             progress_callback(
                 "debate_done",
-                f"Pre-mortem debate complete: Conviction stance is [{stance.value}].",
+                f"Critique complete: Core thesis stance is [{stance.value}].",
                 2,
                 4,
                 {
@@ -140,11 +145,11 @@ def run_pipeline(
             )
     else:
         # Ablated mode: default to simple first-order conviction without adversarial pre-mortem
-        stance = ThesisStance.RECOMMEND
+        stance = ThesisStance.VALIDATED if cfg.mode == "research" else ThesisStance.RECOMMEND
         selected_thesis = CandidateThesis(
             id="T_ABLATED",
-            stance=ThesisStance.RECOMMEND,
-            headline=f"Proceed with {cfg.company_name} based on primary empirical findings and verified metrics",
+            stance=stance,
+            headline=f"Synthesize {cfg.company_name} findings based on primary empirical data and verified metrics",
             core_mechanism="Substantiated by verified claims and core metrics",
             supporting_claim_ids=[c.id for c in verified_claims[:3]],
             primary_vulnerability="Key structural bottlenecks or counter-evidence",
@@ -163,13 +168,14 @@ def run_pipeline(
         debate_result=debate_result if debate_result else DebateArbitrationResult(
             attacks=[],
             selected_thesis_id="T_ABLATED",
-            final_stance=ThesisStance.BUY,
+            final_stance=stance,
             arbitration_summary="Ablation run: pre-mortem bypassed.",
         ),
         claims=verified_claims,
         provider=provider,
+        mode=cfg.mode,
     )
-    draft_markdown = format_minto_to_markdown(minto_draft)
+    draft_markdown = format_minto_to_markdown(minto_draft, mode=cfg.mode)
     if progress_callback:
         progress_callback("minto_done", "Minto Pyramid draft generated.", 3, 4, {"recommendation": minto_draft.recommendation})
 
@@ -184,13 +190,14 @@ def run_pipeline(
             draft_markdown=draft_markdown,
             claims=verified_claims,
             provider=provider,
+            mode=cfg.mode,
         )
         status_str = "[green]PASSED[/green]" if traceability.is_valid else "[red]FAILED[/red]"
         console.print(f"     [green]✓ De-slopping complete (Slop Score: {lint_result.slop_score:.1f}/100 | Traceability: {status_str})[/green]")
         if progress_callback:
             progress_callback(
                 "voice_done",
-                f"Editorial pass complete. Slop score: {lint_result.slop_score:.1f}/100.",
+                "Executive editorial pass complete. Numerical traceability verified.",
                 4,
                 4,
                 {

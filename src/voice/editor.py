@@ -6,7 +6,7 @@ from src.voice.linter import lint_memo, LintResult
 from src.voice.traceability import verify_numerical_traceability, TraceabilityReport
 from src.llm.base import LLMProvider
 
-STYLE_DIRECTIVE = """You are an exacting senior editor and lead research director editing an executive research & decision memo.
+STYLE_DIRECTIVE = """You are an exacting senior editor and lead research director editing an executive research memo / synthesis.
 Your mandate is to eliminate every trace of generic AI writing and replace it with crisp, understated, authoritative analytical prose.
 
 STYLE INVARIANTS:
@@ -15,6 +15,22 @@ STYLE INVARIANTS:
 3. BANNED CLICHÉS: Never use "not only X, but also Y", "testament to", "delve", "tapestry", "landscape", "poised to", "holistic", or "pivotal".
 4. PUNCTUATION DISCIPLINE: Minimize em-dashes (at most 1 in the entire memo). Use standard periods. Avoid symmetrical rule-of-three triplets.
 5. PRESERVE CITATIONS: Maintain all bracketed Claim citations (e.g. [C1], [C4]) and the Minto section structure.
+6. SCANNABLE MARKDOWN & AIRY FORMATTING (NEWLINE DISCIPLINE):
+   - Always put a blank line (double newline) after each topic, heading, and sub-heading.
+   - Use double newlines between paragraphs. Never output dense blocks longer than 3 sentences.
+   - Convert dense inline lists (e.g. '(1)... (2)... (3)...') into clean, scannable markdown bullet lists with bold headers, with a newline after each item.
+   - Preserve or use markdown comparison tables where multiple empirical metrics are compared across regimes.
+7. TONE APPROPRIATENESS:
+   - If the subject is a technology, model, paper, or research concept (e.g. LIIF, continuous representation), keep the tone analytical and research-driven; do NOT force artificial "buy", "sell", or "deploy" procurement decisions.
+8. PLAIN LANGUAGE & DIRECT CAUSALITY:
+   - Write in clear, plain-English prose. Do NOT hide simple economic or technical concepts behind dense Wall Street, management consulting, or academic jargon.
+   - Express abstract concepts as concrete, real-world cause and effect (explain plainly what happens to cash, costs, customers, latency, or hardware).
+   - Concrete examples:
+     * INSTEAD OF: "The contribution margin per order is structurally fragile."
+     * WRITE: "The business barely breaks even on each delivery; small cost increases or promotional discounts quickly create net losses."
+     * INSTEAD OF: "Exhibits asymmetric downside multiple compression risk."
+     * WRITE: "The valuation will drop sharply if revenue growth slows even slightly."
+   - Favor active, concrete verbs over stacked abstract nouns (use "margins drop" or "costs rise" rather than "structural margin degradation" or "cost-profile escalation").
 """
 
 
@@ -22,6 +38,7 @@ def edit_memo(
     draft_markdown: str,
     claims: List[GroundedClaim],
     provider: LLMProvider,
+    mode: str = "research",
 ) -> Tuple[str, LintResult, TraceabilityReport]:
     """
     Execute the editorial pass on draft_markdown.
@@ -37,9 +54,9 @@ def edit_memo(
         f"[{c.id}: {c.metric_or_data}]" for c in claims if c.metric_or_data
     )
 
-    prompt = f"""Rewrite and edit the following investment memo to remove AI clichés and sharpen analyst tone.
+    prompt = f"""Rewrite and edit the following executive research document to sharpen analytical tone, enforce plain-language clarity (translating dense Wall Street or consulting buzzwords into direct real-world effects), maintain scannable markdown formatting with blank lines after each heading/topic, and eliminate generic AI clichés.
 
-CURRENT LINTER VIOLATIONS TO REMOVE:
+DELIVERABLE TYPE: {mode.upper()} SYNTHESIS
 {violations_text}
 
 VERIFIED ALLOWED METRICS (DO NOT INVENT ANY OTHERS):
@@ -50,7 +67,7 @@ ORIGINAL DRAFT MEMO:
 {draft_markdown}
 \"\"\"
 
-Output ONLY the revised markdown text of the investment memo. Do not include meta-commentary.
+Output ONLY the revised markdown text. Ensure a blank line is included after each topic, heading, and list item. Do not include meta-commentary.
 """
 
     edited_text = provider.complete(

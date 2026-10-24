@@ -23,5 +23,10 @@ ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
+# Live Data & Search APIs
+SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
+FMP_API_KEY = os.getenv("FMP_API_KEY", os.getenv("FINANCIAL_MODELING_PREP_API_KEY"))
+SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+
 # Optional External Detector
 PANGRAM_API_KEY = os.getenv("PANGRAM_API_KEY")

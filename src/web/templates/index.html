@@ -5,10 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thesis Engine — Research-to-Conviction Investment Memo Generator</title>
   
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind CSS with Typography plugin -->
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
   <!-- Marked for Markdown Rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    if (typeof marked !== 'undefined') {
+      marked.use({
+        breaks: true,
+        gfm: true
+      });
+    }
+  </script>
   
   <script>
     tailwind.config = {
@@ -23,6 +31,7 @@
               700: '#047857',
             },
             dark: {
+              950: '#060911',
               900: '#090d16',
               800: '#0f172a',
               700: '#1e293b',
@@ -41,50 +50,236 @@
     code, pre {
       font-family: 'JetBrains Mono', monospace;
     }
-    .prose h1 { @apply text-2xl font-bold text-slate-100 mt-6 mb-3 border-b border-slate-700 pb-2; }
-    .prose h2 { @apply text-xl font-semibold text-slate-200 mt-5 mb-2; }
-    .prose h3 { @apply text-lg font-medium text-slate-300 mt-4 mb-2; }
-    .prose p { @apply text-slate-300 my-2 leading-relaxed; }
-    .prose ul { @apply list-disc list-inside text-slate-300 my-2 space-y-1; }
-    .prose ol { @apply list-decimal list-inside text-slate-300 my-2 space-y-1; }
-    .prose blockquote { @apply border-l-4 border-emerald-500 pl-4 py-1 italic text-slate-400 my-3 bg-slate-800/40 rounded-r; }
-    .prose code { @apply bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm; }
-    .prose strong { @apply text-slate-100 font-semibold; }
+
+    /* High-contrast dark inputs matching page surroundings (#090d16) */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea {
+      background-color: #090d16 !important;
+      color: #f8fafc !important;
+      border: 1px solid #334155 !important;
+    }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+      border-color: #10b981 !important;
+      outline: none !important;
+      box-shadow: 0 0 0 1px #10b981 !important;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: #64748b !important;
+    }
+
+    /* Robust Typography Styles for Markdown Rendering */
+    .prose h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-top: 1.75rem;
+      margin-bottom: 0.875rem;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+    .prose h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      padding-bottom: 0.35rem;
+      line-height: 1.35;
+    }
+    .prose h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+    .prose h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .prose p {
+      color: #cbd5e1;
+      margin-top: 0.875rem;
+      margin-bottom: 0.875rem;
+      line-height: 1.75;
+    }
+    .prose ul {
+      list-style-type: disc;
+      list-style-position: outside;
+      margin-top: 0.75rem;
+      margin-bottom: 0.75rem;
+      padding-left: 1.5rem;
+      color: #cbd5e1;
+    }
+    .prose ol {
+      list-style-type: decimal;
+      list-style-position: outside;
+      margin-top: 0.75rem;
+      margin-bottom: 0.75rem;
+      padding-left: 1.5rem;
+      color: #cbd5e1;
+    }
+    .prose li {
+      margin-top: 0.375rem;
+      margin-bottom: 0.375rem;
+      line-height: 1.65;
+    }
+    .prose li > ul, .prose li > ol {
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+    .prose hr {
+      border: none;
+      border-top: 1px solid #334155;
+      margin: 1.75rem 0;
+    }
+    .prose blockquote {
+      border-left: 4px solid #10b981;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      font-style: italic;
+      color: #94a3b8;
+      background-color: rgba(30, 41, 59, 0.4);
+      border-top-right-radius: 0.375rem;
+      border-bottom-right-radius: 0.375rem;
+    }
+    .prose code {
+      background-color: #1e293b;
+      color: #34d399;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      font-size: 0.85em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .prose pre {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+    .prose pre code {
+      background: transparent;
+      padding: 0;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+    }
+    .prose strong {
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+    .prose table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.25rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.875rem;
+    }
+    .prose th, .prose td {
+      border: 1px solid #334155;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    .prose th {
+      background-color: #1e293b;
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+    .prose tr:nth-child(even) {
+      background-color: rgba(15, 23, 42, 0.4);
+    }
   </style>
 </head>
 <body class="bg-dark-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
 
   <!-- Navigation Bar -->
   <header class="border-b border-slate-800 bg-dark-900/90 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <!-- Left: Logo & Engine Title -->
+      <div class="flex items-center space-x-3 shrink-0 cursor-pointer" onclick="resetToHome()">
         <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
           Δ
         </div>
         <div>
           <span class="font-bold text-slate-100 tracking-tight text-lg">Thesis Engine</span>
-          <span class="text-xs text-slate-400 ml-2 hidden sm:inline px-2 py-0.5 bg-slate-800 rounded-full border border-slate-700">Minto & Adversarial Debate</span>
+          <span id="headerTaglineBadge" class="text-xs text-slate-400 ml-2 hidden sm:inline px-2 py-0.5 bg-slate-800 rounded-full border border-slate-700">Minto & Adversarial Debate</span>
         </div>
       </div>
       
-      <!-- Top Badges & BYOK Info -->
-      <div class="flex items-center space-x-3 text-xs">
+      <!-- Center: Google Scholar Style Search Bar (Appears when final output exists) -->
+      <div id="headerSearchBarContainer" class="hidden flex-1 max-w-xl mx-2">
+        <form onsubmit="handleHeaderSearch(event)" class="relative flex items-center">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <input 
+            type="text" 
+            id="headerTopicInput" 
+            placeholder="Search topic or company (e.g. LIIF, SpaceX Starship)..."
+            class="w-full bg-dark-900 border border-slate-700 rounded-full pl-10 pr-24 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner"
+          >
+          <div class="absolute inset-y-0 right-0 pr-1.5 flex items-center space-x-1">
+            <button 
+              type="button" 
+              onclick="toggleConfigCard()" 
+              id="headerFilterBtn"
+              title="Toggle Parameters & Model Settings"
+              class="px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-full transition border border-slate-700 flex items-center space-x-1 cursor-pointer"
+            >
+              <span>⚙️</span>
+              <span class="hidden md:inline text-[10px]">Config</span>
+            </button>
+            <button 
+              type="submit" 
+              class="px-2.5 py-1 text-[11px] font-semibold text-dark-900 bg-emerald-400 hover:bg-emerald-300 rounded-full transition cursor-pointer shadow-xs"
+            >
+              Run
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Top Badges & Actions -->
+      <div class="flex items-center space-x-2.5 text-xs shrink-0">
+        <button 
+          type="button" 
+          id="btnNewSynthesisHeader" 
+          onclick="toggleConfigCard(true)" 
+          class="hidden px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 font-medium transition cursor-pointer"
+        >
+          <span>+ New Search</span>
+        </button>
         <div class="flex items-center text-slate-400 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-full">
           <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
-          <span>Zero Server Storage</span>
+          <span class="hidden md:inline">Zero Server Storage</span>
+          <span class="md:hidden">Stateless</span>
         </div>
       </div>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8" id="mainContainer">
     
     <!-- Left Column: Configuration & Inputs (5 cols on lg) -->
-    <div class="lg:col-span-5 space-y-6">
+    <div class="lg:col-span-5 space-y-6 transition-all duration-300" id="leftConfigCol">
       
       <!-- Input Card -->
-      <div class="bg-dark-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl">
+      <div class="bg-dark-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl" id="researchSubjectCard">
         <h2 class="text-base font-semibold text-slate-100 mb-1 flex items-center">
           <svg class="w-4 h-4 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -96,14 +291,40 @@
         <!-- Topic Name -->
         <div class="space-y-3 mb-4">
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1">Topic / Company Name *</label>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Topic / Subject Name *</label>
             <input 
               type="text" 
               id="topicInput" 
-              placeholder="e.g. SpaceX Starship Launch Cadence & Economics"
+              placeholder="e.g. LIIF (Local Implicit Image Function) Model"
               class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
             >
           </div>
+        </div>
+
+        <!-- Deliverable Type Toggle -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-slate-300 mb-2">Deliverable Intent</label>
+          <div class="grid grid-cols-2 gap-2 bg-dark-900 p-1 rounded-xl border border-slate-700">
+            <button 
+              type="button" 
+              id="modeBtnResearch" 
+              onclick="setAnalysisMode('research')"
+              class="py-2 text-xs font-semibold rounded-lg transition bg-slate-800 text-emerald-400 shadow-sm flex items-center justify-center space-x-1 cursor-pointer"
+            >
+              <span>🔬 Research Synthesis</span>
+            </button>
+            <button 
+              type="button" 
+              id="modeBtnInvestment" 
+              onclick="setAnalysisMode('investment')"
+              class="py-2 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center justify-center space-x-1 cursor-pointer"
+            >
+              <span>💼 Investment Memo</span>
+            </button>
+          </div>
+          <p id="modeDescText" class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+            Synthesizes key findings, architectural trade-offs, and empirical benchmarks into an Answer-First research thesis without artificial buy/deploy mandates.
+          </p>
         </div>
 
         <!-- Dossier Mode Toggle -->
@@ -133,9 +354,9 @@
         <div id="autoSearchBox" class="p-3.5 bg-emerald-950/20 border border-emerald-900/50 rounded-xl text-xs text-emerald-300/90 leading-relaxed mb-4">
           <div class="font-medium mb-1 flex items-center text-emerald-300">
             <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Automated Google Search Grounding
+            Automated Live Web Research (Phase 0)
           </div>
-          Gemini will execute live search queries, extract recent empirical metrics, financials, and quotes, and compile a structured research packet before memo synthesis.
+          Uses Google Search Grounding to fetch live web data & compile a fact-rich research packet before your chosen Inference Engine (Claude/Gemini) executes the analytical memo pipeline. If Google Search quota is resting, it automatically falls back to your inference engine's knowledge base, or you can paste audited text in <strong>📄 Paste / Upload</strong>.
         </div>
 
         <!-- Custom Dossier Input Area -->
@@ -155,109 +376,105 @@
           ></textarea>
         </div>
 
-        <!-- Model Choice Section -->
-        <div class="pt-3 border-t border-slate-700/60 mb-5">
-          <label class="block text-xs font-medium text-slate-300 mb-2">Inference Engine</label>
-          <div class="grid grid-cols-2 gap-3">
+        <!-- Unified Inference Engine Section -->
+        <div class="pt-4 border-t border-slate-700/60 mb-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-200">Inference Engine</label>
+            <span id="engineBadge" class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              Gemini 3.8 / 3.5 Flash
+            </span>
+          </div>
+
+          <!-- Engine Toggle: Gemini vs Claude -->
+          <div class="grid grid-cols-2 gap-2 bg-dark-900 p-1 rounded-xl border border-slate-700">
+            <button 
+              type="button" 
+              id="engineBtnGemini" 
+              onclick="setInferenceEngine('gemini')"
+              class="py-2.5 px-3 text-xs font-semibold rounded-lg transition bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <span>✦ Google Gemini</span>
+            </button>
+            <button 
+              type="button" 
+              id="engineBtnClaude" 
+              onclick="setInferenceEngine('claude')"
+              class="py-2.5 px-3 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <span>✻ Anthropic Claude</span>
+            </button>
+          </div>
+
+          <!-- Shared Access Card (Same architecture for both engines) -->
+          <div class="p-4 bg-dark-900/90 border border-slate-700 rounded-xl space-y-3">
             
-            <!-- Gemini Card -->
-            <label class="relative flex flex-col p-3 rounded-xl border border-slate-700 bg-dark-900 cursor-pointer hover:border-slate-600 transition" id="modelGeminiCard">
-              <input type="radio" name="modelRadio" value="gemini" checked onchange="handleModelChange('gemini')" class="sr-only">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-semibold text-slate-100">Google Gemini</span>
-                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20 font-medium">Free</span>
+            <!-- Access Mode Sub-Toggle: Free Tier (3 Runs) vs My API Key -->
+            <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
+              <span id="accessModeTitle" class="font-medium text-slate-300">Gemini Access Mode</span>
+              <div class="flex items-center space-x-3 text-xs">
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="radio" name="authModeRadio" value="free" checked onchange="setAuthMode('free')" class="text-emerald-500 focus:ring-0">
+                  <span class="ml-1.5 text-xs text-slate-300">Free Tier (3 Runs)</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                  <input type="radio" name="authModeRadio" value="byok" onchange="setAuthMode('byok')" class="text-emerald-500 focus:ring-0">
+                  <span class="ml-1.5 text-xs text-slate-300">My API Key</span>
+                </label>
               </div>
-              <p class="text-[11px] text-slate-400">Gemini 3.8 / 3.5 Flash with search tools</p>
-            </label>
-
-            <!-- Claude Card -->
-            <label class="relative flex flex-col p-3 rounded-xl border border-slate-700 bg-dark-900 cursor-pointer hover:border-slate-600 transition" id="modelClaudeCard">
-              <input type="radio" name="modelRadio" value="claude" onchange="handleModelChange('claude')" class="sr-only">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-semibold text-slate-100">Anthropic Claude</span>
-                <span class="text-[10px] bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/20 font-medium">Sonnet 3.5</span>
-              </div>
-              <p class="text-[11px] text-slate-400">BYOK or 3 free prompt allowance</p>
-            </label>
-          </div>
-        </div>
-
-        <!-- Claude Mode Sub-Panel (Appears if Claude is chosen) -->
-        <div id="claudeSubPanel" class="hidden p-4 bg-purple-950/20 border border-purple-900/40 rounded-xl space-y-3 mb-5">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-medium text-purple-300">Claude Access Mode</span>
-            <div class="space-x-3">
-              <label class="inline-flex items-center cursor-pointer">
-                <input type="radio" name="claudeAuthMode" value="free" checked onchange="toggleClaudeAuthMode('free')" class="text-purple-600 focus:ring-0">
-                <span class="ml-1.5 text-xs text-slate-300">Free Tier (3 Runs)</span>
-              </label>
-              <label class="inline-flex items-center cursor-pointer">
-                <input type="radio" name="claudeAuthMode" value="byok" onchange="toggleClaudeAuthMode('byok')" class="text-purple-600 focus:ring-0">
-                <span class="ml-1.5 text-xs text-slate-300">My API Key</span>
-              </label>
             </div>
-          </div>
 
-          <!-- Free Claude Form -->
-          <div id="claudeFreeForm" class="space-y-2">
-            <label class="block text-[11px] text-slate-400">Enter email to claim free runs:</label>
-            <div class="flex space-x-2">
+            <!-- Free Tier Form (Shared) -->
+            <div id="freeTierForm" class="space-y-2">
+              <label class="block text-[11px] text-slate-400">Enter email to claim free runs:</label>
+              <div class="flex space-x-2">
+                <input 
+                  type="email" 
+                  id="userEmailInput" 
+                  placeholder="investor@fund.com"
+                  class="flex-1 bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+                  onchange="refreshQuota()"
+                >
+                <button 
+                  type="button" 
+                  onclick="refreshQuota()" 
+                  class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition border border-slate-700 cursor-pointer font-medium"
+                >
+                  Check
+                </button>
+              </div>
+              <div id="quotaBadge" class="text-[11px] text-slate-400 flex items-center">
+                <span>Allowance: 3 free Gemini memos</span>
+              </div>
+            </div>
+
+            <!-- BYOK Form (Shared, dynamic labels and placeholders) -->
+            <div id="byokForm" class="hidden space-y-2">
+              <div class="flex items-center justify-between">
+                <label id="apiKeyLabel" class="block text-[11px] text-slate-400">Google Gemini API Key:</label>
+                <a id="apiKeyHelpLink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-[10px] text-emerald-400 hover:underline">Get Free Key ↗</a>
+              </div>
+              <!-- Gemini Input -->
               <input 
-                type="email" 
-                id="userEmailInput" 
-                placeholder="investor@fund.com"
-                class="flex-1 bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500"
-                onchange="refreshQuota()"
+                type="password" 
+                id="userGeminiKeyInput" 
+                placeholder="AIzaSy..."
+                class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition"
               >
-              <button 
-                type="button" 
-                onclick="refreshQuota()" 
-                class="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs rounded-lg hover:bg-slate-700 transition"
+              <!-- Claude Input -->
+              <input 
+                type="password" 
+                id="userClaudeKeyInput" 
+                placeholder="sk-ant-api03-..."
+                class="hidden w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 font-mono transition"
               >
-                Check
-              </button>
             </div>
-            <div id="quotaBadge" class="text-[11px] text-slate-400 flex items-center">
-              <span>Allowance: 3 free memos</span>
+
+            <!-- Stateless Guarantee Notice (Shared) -->
+            <div class="text-[11px] text-slate-400 flex items-start pt-1 border-t border-slate-800/80">
+              <svg class="w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5 text-emerald-400" id="statelessIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              <span><strong>Stateless Guarantee:</strong> API keys and credentials are held only in browser memory and passed directly via secure SSL headers. They are never logged or stored on our servers.</span>
             </div>
-          </div>
 
-          <!-- BYOK Claude Form -->
-          <div id="claudeByokForm" class="hidden space-y-2">
-            <label class="block text-[11px] text-slate-400">Anthropic API Key:</label>
-            <input 
-              type="password" 
-              id="userClaudeKeyInput" 
-              placeholder="sk-ant-api03-..."
-              class="w-full bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 font-mono"
-            >
-          </div>
-
-          <!-- Stateless Guarantee Notice -->
-          <div class="text-[11px] text-purple-300/80 flex items-start pt-1">
-            <svg class="w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-            <span><strong>Stateless Guarantee:</strong> Your API key is held only in browser memory and passed directly via secure SSL headers. It is never logged or stored on our servers.</span>
-          </div>
-        </div>
-
-        <!-- Optional Gemini BYOK (Accordion) -->
-        <div class="mb-5">
-          <button 
-            type="button" 
-            onclick="document.getElementById('geminiByokBox').classList.toggle('hidden')" 
-            class="text-[11px] text-slate-400 hover:text-slate-200 flex items-center transition"
-          >
-            <span class="mr-1">⚙️ Custom Gemini API Key (Optional)</span>
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-          </button>
-          <div id="geminiByokBox" class="hidden mt-2 p-3 bg-dark-900 rounded-xl border border-slate-700 space-y-1">
-            <label class="block text-[11px] text-slate-400">Custom Google AI Studio Key (bypasses shared rate limits):</label>
-            <input 
-              type="password" 
-              id="userGeminiKeyInput" 
-              placeholder="AIzaSy..."
-              class="w-full bg-dark-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
-            >
           </div>
         </div>
 
@@ -266,17 +483,32 @@
           type="button" 
           id="btnGenerate" 
           onclick="startGeneration()" 
-          class="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-dark-900 font-semibold rounded-xl text-sm flex items-center justify-center space-x-2 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-dark-900 font-semibold rounded-xl text-sm flex items-center justify-center space-x-2 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          <span>Generate Investment Memo</span>
+          <span id="btnGenerateText">Generate Research Synthesis</span>
         </button>
 
       </div>
     </div>
 
-    <!-- Right Column: Interactive Pipeline Stepper & Final Output (7 cols on lg) -->
-    <div class="lg:col-span-7 space-y-6">
+    <!-- Right Column: Interactive Pipeline Stepper & Final Output (7 cols on lg, expands to 12 when collapsed) -->
+    <div class="lg:col-span-7 space-y-6 transition-all duration-300" id="rightContentCol">
+
+      <!-- Collapsed Quick Bar (Shown when research subject modal is collapsed after final output) -->
+      <div id="collapsedQuickBar" class="hidden flex flex-wrap items-center justify-between gap-3 p-4 bg-dark-800 border border-slate-700/80 rounded-2xl shadow-lg">
+        <div class="flex items-center space-x-2.5 text-xs">
+          <span class="text-slate-400">Research Topic:</span>
+          <span id="activeTopicBadge" class="font-semibold text-slate-100 bg-dark-900 px-3 py-1 rounded-lg border border-slate-700"></span>
+          <span id="activeEngineLabelBadge" class="text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-medium"></span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="toggleConfigCard()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition flex items-center space-x-1.5 cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <span id="toggleConfigBtnText">Modify Parameters</span>
+          </button>
+        </div>
+      </div>
 
       <!-- Pipeline Execution Live Stepper -->
       <div id="stepperCard" class="hidden bg-dark-800 border border-slate-700/80 rounded-2xl p-6 shadow-xl transition-all">
@@ -299,8 +531,12 @@
           <div id="stepItem0" class="hidden flex items-start space-x-3 p-2.5 rounded-xl border border-slate-800 bg-dark-900/40">
             <div id="stepDot0" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 flex-shrink-0 mt-0.5">0</div>
             <div class="flex-1">
-              <div class="font-medium text-slate-200">Grounded Web Research & Dossier Synthesis</div>
+              <div class="flex items-center justify-between">
+                <div class="font-medium text-slate-200">Grounded Web Research & Dossier Synthesis</div>
+                <button type="button" id="btnPreviewDossierLive" onclick="toggleLiveDossierPreview()" class="hidden text-[10px] text-indigo-400 hover:text-indigo-200 transition cursor-pointer">Preview Dossier</button>
+              </div>
               <div id="stepDetail0" class="text-slate-400 text-[11px] mt-0.5">Querying Google Search for empirical metrics and recent filings...</div>
+              <div id="liveDossierPreviewBox" class="hidden mt-2 p-2.5 bg-dark-950 rounded-lg border border-slate-800 text-[11px] font-mono text-slate-300 max-h-36 overflow-y-auto whitespace-pre-wrap"></div>
             </div>
           </div>
 
@@ -354,8 +590,8 @@
         <!-- Result Header & Badges -->
         <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-700/60">
           <div>
-            <span class="text-xs text-slate-400 font-medium">Final Investment Deliverable</span>
-            <h2 id="resultTitle" class="text-lg font-bold text-slate-100">Executive Research & Decision Memo</h2>
+            <span class="text-xs text-slate-400 font-medium" id="deliverableSubtext">Synthesized Research Deliverable</span>
+            <h2 id="resultTitle" class="text-lg font-bold text-slate-100">Research Synthesis & Thesis</h2>
           </div>
           
           <!-- Quality Metric Badges -->
@@ -366,14 +602,121 @@
             <span id="badgeTraceability" class="px-2.5 py-1 rounded-full font-medium bg-slate-900 text-slate-300 border border-slate-700">
               100% Traceability
             </span>
-            <span id="badgeSlop" class="px-2.5 py-1 rounded-full font-medium bg-slate-900 text-slate-300 border border-slate-700">
-              Slop Score: 0/100
+            <span id="badgeClaimsCount" class="px-2.5 py-1 rounded-full font-medium bg-slate-900 text-slate-300 border border-slate-700">
+              0 Verified Claims
             </span>
           </div>
         </div>
 
-        <!-- Memo Content (Markdown Rendered) -->
-        <div id="memoMarkdownContainer" class="prose max-w-none text-slate-300 bg-dark-900/60 p-5 rounded-xl border border-slate-800 overflow-x-auto text-sm leading-relaxed max-h-[700px] overflow-y-auto">
+        <!-- View Mode Switcher: Memo vs. Dossier vs. Side-by-Side -->
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-dark-900/80 p-2 rounded-xl border border-slate-700/80">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[11px] font-medium text-slate-400 mr-1">View:</span>
+            <button 
+              type="button" 
+              id="viewTabMemo" 
+              onclick="switchOutputView('memo')" 
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-800 text-emerald-400 border border-slate-700 shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            >
+              <span>📄 Decision Memo</span>
+            </button>
+            <button 
+              type="button" 
+              id="viewTabDossier" 
+              onclick="switchOutputView('dossier')" 
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 flex items-center space-x-1.5 cursor-pointer"
+            >
+              <span>🌐 Research Dossier</span>
+              <span id="dossierSourceBadge" class="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-1.5 py-0.2 rounded font-mono">Source</span>
+            </button>
+            <button 
+              type="button" 
+              id="viewTabSplit" 
+              onclick="switchOutputView('split')" 
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 flex items-center space-x-1.5 cursor-pointer"
+            >
+              <span>⚖️ Side-by-Side (Compare)</span>
+            </button>
+          </div>
+          <div class="text-[11px] font-mono text-slate-400 flex items-center space-x-2">
+            <span id="compressionRatioBadge" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"></span>
+          </div>
+        </div>
+
+        <!-- Mode 1: Memo View Pane -->
+        <div id="memoViewPane">
+          <div id="memoMarkdownContainer" class="prose max-w-none text-slate-300 bg-dark-900/60 p-5 rounded-xl border border-slate-800 overflow-x-auto text-sm leading-relaxed max-h-[700px] overflow-y-auto">
+          </div>
+        </div>
+
+        <!-- Mode 2: Dossier View Pane -->
+        <div id="dossierViewPane" class="hidden space-y-3">
+          <div class="p-3 bg-indigo-950/40 border border-indigo-900/60 rounded-xl text-xs text-indigo-200 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span><strong>Compiled Research Dossier:</strong> Raw factual research packet compiled by live web search. Every metric in the memo originated from this document.</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="copyDossier()" class="px-2.5 py-1 bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 rounded text-[11px] font-medium transition cursor-pointer">
+                Copy Dossier
+              </button>
+              <button type="button" onclick="downloadDossier()" class="px-2.5 py-1 bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 rounded text-[11px] font-medium transition cursor-pointer">
+                Download (.md)
+              </button>
+            </div>
+          </div>
+          <div id="dossierMarkdownContainer" class="prose max-w-none text-slate-300 bg-dark-900/60 p-5 rounded-xl border border-slate-800 overflow-x-auto text-sm leading-relaxed max-h-[700px] overflow-y-auto">
+          </div>
+        </div>
+
+        <!-- Mode 3: Split Side-by-Side Comparison Pane -->
+        <div id="splitViewPane" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Left Column: Raw Research Dossier -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between px-1">
+              <span class="text-xs font-semibold text-slate-300 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 mr-1.5"></span>
+                Research Dossier (Input Source)
+              </span>
+              <span id="dossierWordCount" class="text-[10px] text-slate-400 font-mono bg-dark-900 px-1.5 py-0.5 rounded border border-slate-800"></span>
+            </div>
+            <div id="splitDossierContainer" class="prose max-w-none text-slate-300 bg-dark-900/70 p-4 rounded-xl border border-slate-800 overflow-x-auto text-xs leading-relaxed max-h-[650px] overflow-y-auto">
+            </div>
+          </div>
+          <!-- Right Column: Synthesized Decision Memo -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between px-1">
+              <span class="text-xs font-semibold text-slate-300 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5"></span>
+                Executive Decision Memo (Distilled Output)
+              </span>
+              <span id="memoWordCount" class="text-[10px] text-slate-400 font-mono bg-dark-900 px-1.5 py-0.5 rounded border border-slate-800"></span>
+            </div>
+            <div id="splitMemoContainer" class="prose max-w-none text-slate-300 bg-dark-900/70 p-4 rounded-xl border border-slate-800 overflow-x-auto text-xs leading-relaxed max-h-[650px] overflow-y-auto">
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Verified Claims Library -->
+        <div class="border border-slate-700/60 rounded-xl overflow-hidden bg-dark-900/40">
+          <button 
+            type="button" 
+            onclick="toggleClaimsLibrary()" 
+            class="w-full px-4 py-2.5 flex items-center justify-between text-xs font-medium text-slate-300 hover:bg-slate-800/50 transition cursor-pointer"
+          >
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <span>Verified Sources & Evidence Library (<span id="claimsLibraryCount">0</span> Claims)</span>
+            </div>
+            <div class="flex items-center space-x-1 text-slate-400 text-[11px]">
+              <span id="claimsToggleText">Click to expand</span>
+              <svg id="claimsToggleIcon" class="w-3.5 h-3.5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </button>
+          <div id="claimsLibraryPanel" class="hidden p-4 border-t border-slate-800 space-y-3 max-h-[400px] overflow-y-auto">
+            <div class="text-[11px] text-slate-400">Click any citation tag <code class="text-indigo-300 bg-indigo-950/60 px-1 py-0.5 rounded font-mono">[C#]</code> in the memo to inspect its verbatim source quote.</div>
+            <div id="claimsLibraryList" class="space-y-2"></div>
+          </div>
         </div>
 
         <!-- Bottom Action Bar -->
@@ -443,10 +786,38 @@
 
   <!-- Client-side Logic -->
   <script>
+    if (typeof marked !== 'undefined') {
+      marked.use({ breaks: true, gfm: true });
+    }
+
     let activeDossierTab = 'auto';
-    let selectedModel = 'gemini';
-    let claudeAuthMode = 'free';
+    let selectedEngine = 'gemini';
+    let currentAuthMode = 'free';
+    let activeAnalysisMode = 'research';
     let currentFinalMemo = '';
+
+    function setAnalysisMode(mode) {
+      activeAnalysisMode = mode;
+      const btnResearch = document.getElementById('modeBtnResearch');
+      const btnInvestment = document.getElementById('modeBtnInvestment');
+      const desc = document.getElementById('modeDescText');
+      const topicInput = document.getElementById('topicInput');
+      const btnText = document.getElementById('btnGenerateText');
+
+      if (mode === 'research') {
+        btnResearch.className = 'py-2 text-xs font-semibold rounded-lg transition bg-slate-800 text-emerald-400 shadow-sm flex items-center justify-center space-x-1 cursor-pointer';
+        btnInvestment.className = 'py-2 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center justify-center space-x-1 cursor-pointer';
+        desc.textContent = "Synthesizes key findings, architectural trade-offs, and empirical benchmarks into an Answer-First research thesis without artificial buy/deploy mandates.";
+        topicInput.placeholder = "e.g. LIIF (Local Implicit Image Function) Model or Mamba SSM vs Transformer";
+        btnText.textContent = "Generate Research Synthesis";
+      } else {
+        btnInvestment.className = 'py-2 text-xs font-semibold rounded-lg transition bg-slate-800 text-emerald-400 shadow-sm flex items-center justify-center space-x-1 cursor-pointer';
+        btnResearch.className = 'py-2 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center justify-center space-x-1 cursor-pointer';
+        desc.textContent = "Formulates Answer-First investment conviction (Buy/Conditional/Pass) with adversarial pre-mortem criticism.";
+        topicInput.placeholder = "e.g. SpaceX Starship Launch Cadence & Economics or Apex Systems";
+        btnText.textContent = "Generate Investment Memo";
+      }
+    }
 
     // Generate or retrieve persistent browser device fingerprint
     function getDeviceFingerprint() {
@@ -488,56 +859,194 @@
       reader.readAsText(file);
     }
 
-    function handleModelChange(model) {
-      selectedModel = model;
-      const claudeSubPanel = document.getElementById('claudeSubPanel');
-      const geminiCard = document.getElementById('modelGeminiCard');
-      const claudeCard = document.getElementById('modelClaudeCard');
+    function setInferenceEngine(engine) {
+      selectedEngine = engine;
+      const btnGemini = document.getElementById('engineBtnGemini');
+      const btnClaude = document.getElementById('engineBtnClaude');
+      const badge = document.getElementById('engineBadge');
+      const title = document.getElementById('accessModeTitle');
+      const apiKeyLabel = document.getElementById('apiKeyLabel');
+      const helpLink = document.getElementById('apiKeyHelpLink');
+      const geminiInput = document.getElementById('userGeminiKeyInput');
+      const claudeInput = document.getElementById('userClaudeKeyInput');
+      const icon = document.getElementById('statelessIcon');
+      const emailInput = document.getElementById('userEmailInput');
 
-      if (model === 'claude') {
-        claudeSubPanel.classList.remove('hidden');
-        claudeCard.classList.add('border-purple-500/60', 'bg-purple-950/10');
-        geminiCard.classList.remove('border-emerald-500/60', 'bg-emerald-950/10');
-        refreshQuota();
+      if (engine === 'gemini') {
+        btnGemini.className = 'py-2.5 px-3 text-xs font-semibold rounded-lg transition bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm flex items-center justify-center space-x-1.5 cursor-pointer';
+        btnClaude.className = 'py-2.5 px-3 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center justify-center space-x-1.5 cursor-pointer';
+        badge.textContent = "Gemini 3.8 / 3.5 Flash";
+        badge.className = "text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+        title.textContent = "Gemini Access Mode";
+        apiKeyLabel.textContent = "Google Gemini API Key:";
+        helpLink.href = "https://aistudio.google.com/app/apikey";
+        helpLink.textContent = "Get Free Key ↗";
+        helpLink.className = "text-[10px] text-emerald-400 hover:underline";
+        geminiInput.classList.remove('hidden');
+        claudeInput.classList.add('hidden');
+        icon.className = "w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5 text-emerald-400";
+        if (emailInput) {
+          emailInput.className = "flex-1 bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition";
+        }
       } else {
-        claudeSubPanel.classList.add('hidden');
-        geminiCard.classList.add('border-emerald-500/60', 'bg-emerald-950/10');
-        claudeCard.classList.remove('border-purple-500/60', 'bg-purple-950/10');
+        btnClaude.className = 'py-2.5 px-3 text-xs font-semibold rounded-lg transition bg-slate-800 text-purple-400 border border-slate-700 shadow-sm flex items-center justify-center space-x-1.5 cursor-pointer';
+        btnGemini.className = 'py-2.5 px-3 text-xs font-medium rounded-lg transition text-slate-400 hover:text-slate-200 flex items-center justify-center space-x-1.5 cursor-pointer';
+        badge.textContent = "Claude 3.5 Sonnet";
+        badge.className = "text-[10px] px-2 py-0.5 rounded-full font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30";
+        title.textContent = "Claude Access Mode";
+        apiKeyLabel.textContent = "Anthropic Claude API Key:";
+        helpLink.href = "https://console.anthropic.com/settings/keys";
+        helpLink.textContent = "Get Claude Key ↗";
+        helpLink.className = "text-[10px] text-purple-400 hover:underline";
+        geminiInput.classList.add('hidden');
+        claudeInput.classList.remove('hidden');
+        icon.className = "w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5 text-purple-400";
+        if (emailInput) {
+          emailInput.className = "flex-1 bg-dark-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 transition";
+        }
+      }
+
+      if (currentAuthMode === 'free') {
+        refreshQuota();
       }
     }
 
-    function toggleClaudeAuthMode(mode) {
-      claudeAuthMode = mode;
-      const freeForm = document.getElementById('claudeFreeForm');
-      const byokForm = document.getElementById('claudeByokForm');
+    function setAuthMode(mode) {
+      currentAuthMode = mode;
+      const freeForm = document.getElementById('freeTierForm');
+      const byokForm = document.getElementById('byokForm');
+
+      const radios = document.getElementsByName('authModeRadio');
+      for (const r of radios) {
+        if (r.value === mode) r.checked = true;
+      }
+
       if (mode === 'free') {
         freeForm.classList.remove('hidden');
         byokForm.classList.add('hidden');
+        refreshQuota();
       } else {
         freeForm.classList.add('hidden');
         byokForm.classList.remove('hidden');
       }
     }
 
+    // Backward compatibility aliases
+    function handleModelChange(model) { setInferenceEngine(model); }
+    function toggleClaudeAuthMode(mode) { setAuthMode(mode); }
+
     async function refreshQuota() {
       const email = document.getElementById('userEmailInput').value.trim();
       const badge = document.getElementById('quotaBadge');
+      const engineName = selectedEngine === 'gemini' ? 'Gemini' : 'Claude';
+
       if (!email) {
-        badge.innerHTML = `<span class="text-slate-400">Enter email to view free prompt balance.</span>`;
+        badge.innerHTML = `<span class="text-slate-400">Enter email to view free ${engineName} prompt balance.</span>`;
         return;
       }
+
+      localStorage.setItem('thesis_user_email', email);
+
       try {
         const fp = getDeviceFingerprint();
-        const res = await fetch(`/api/quota?email=${encodeURIComponent(email)}&fingerprint=${encodeURIComponent(fp)}`);
+        const res = await fetch(`/api/quota?email=${encodeURIComponent(email)}&fingerprint=${encodeURIComponent(fp)}&provider=${selectedEngine}`);
         const data = await res.json();
+        const activeColor = selectedEngine === 'gemini' ? 'text-emerald-400' : 'text-purple-400';
         if (data.allowed) {
-          badge.innerHTML = `<span class="text-emerald-400 font-semibold">✓ ${data.remaining} of ${data.max} free runs remaining</span>`;
+          badge.innerHTML = `<span class="${activeColor} font-semibold">✓ ${data.remaining} of ${data.max} free ${engineName} runs remaining</span>`;
         } else {
-          badge.innerHTML = `<span class="text-amber-400 font-medium">⚠️ 0 of ${data.max} free runs remaining (${data.reason || 'Limit reached'})</span>`;
+          badge.innerHTML = `<span class="text-amber-400 font-medium">⚠️ 0 of ${data.max} free ${engineName} runs remaining (${data.reason || 'Limit reached'}). Please provide your API key.</span>`;
         }
       } catch (err) {
         badge.innerHTML = `<span class="text-slate-500">Quota status unavailable</span>`;
       }
+    }
+
+    function collapseResearchSubjectModal(topicName) {
+      const leftCol = document.getElementById('leftConfigCol');
+      const rightCol = document.getElementById('rightContentCol');
+      const headerSearch = document.getElementById('headerSearchBarContainer');
+      const headerInput = document.getElementById('headerTopicInput');
+      const headerTagline = document.getElementById('headerTaglineBadge');
+      const btnNewSearch = document.getElementById('btnNewSynthesisHeader');
+      const quickBar = document.getElementById('collapsedQuickBar');
+      const topicBadge = document.getElementById('activeTopicBadge');
+      const engineBadge = document.getElementById('activeEngineLabelBadge');
+      const currentTopic = topicName || document.getElementById('topicInput').value.trim();
+
+      // 1. Collapse the left configuration column into full-width output
+      if (leftCol) leftCol.classList.add('hidden');
+      if (rightCol) {
+        rightCol.className = 'lg:col-span-12 space-y-6 transition-all duration-300';
+      }
+
+      // 2. Activate Google Scholar style search bar in header
+      if (headerSearch) headerSearch.classList.remove('hidden');
+      if (headerInput) headerInput.value = currentTopic;
+      if (headerTagline) headerTagline.classList.add('hidden');
+      if (btnNewSearch) btnNewSearch.classList.remove('hidden');
+
+      // 3. Show collapsed quick-action bar above result
+      if (quickBar) quickBar.classList.remove('hidden');
+      if (topicBadge) topicBadge.textContent = currentTopic;
+      if (engineBadge) {
+        engineBadge.textContent = selectedEngine === 'gemini' ? 'Google Gemini' : 'Anthropic Claude';
+        engineBadge.className = selectedEngine === 'gemini' 
+          ? 'text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-medium'
+          : 'text-[11px] text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded border border-purple-500/20 font-medium';
+      }
+    }
+
+    function toggleConfigCard(forceOpen = false) {
+      const leftCol = document.getElementById('leftConfigCol');
+      const rightCol = document.getElementById('rightContentCol');
+      const toggleBtnText = document.getElementById('toggleConfigBtnText');
+
+      if (!leftCol || !rightCol) return;
+
+      const isHidden = leftCol.classList.contains('hidden');
+      if (isHidden || forceOpen) {
+        // Expand
+        leftCol.classList.remove('hidden');
+        rightCol.className = 'lg:col-span-7 space-y-6 transition-all duration-300';
+        if (toggleBtnText) toggleBtnText.textContent = "Collapse Parameters";
+        leftCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // Collapse
+        leftCol.classList.add('hidden');
+        rightCol.className = 'lg:col-span-12 space-y-6 transition-all duration-300';
+        if (toggleBtnText) toggleBtnText.textContent = "Modify Parameters";
+      }
+    }
+
+    function handleHeaderSearch(event) {
+      if (event) event.preventDefault();
+      const headerInput = document.getElementById('headerTopicInput');
+      const newTopic = headerInput ? headerInput.value.trim() : '';
+      if (!newTopic) {
+        alert("Please enter a research topic or company name.");
+        return;
+      }
+      // Sync with main topic input
+      document.getElementById('topicInput').value = newTopic;
+
+      // Collapse config panel if it was open
+      const leftCol = document.getElementById('leftConfigCol');
+      const rightCol = document.getElementById('rightContentCol');
+      if (leftCol && rightCol) {
+        leftCol.classList.add('hidden');
+        rightCol.className = 'lg:col-span-12 space-y-6 transition-all duration-300';
+      }
+
+      startGeneration();
+    }
+
+    function resetToHome() {
+      const leftCol = document.getElementById('leftConfigCol');
+      const rightCol = document.getElementById('rightContentCol');
+      if (leftCol) leftCol.classList.remove('hidden');
+      if (rightCol) rightCol.className = 'lg:col-span-7 space-y-6 transition-all duration-300';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function highlightStage(stepIndex) {
@@ -576,10 +1085,22 @@
       const userEmail = document.getElementById('userEmailInput').value.trim();
       const userClaudeKey = document.getElementById('userClaudeKeyInput').value.trim();
       const userGeminiKey = document.getElementById('userGeminiKeyInput').value.trim();
+      const engineName = selectedEngine === 'gemini' ? 'Gemini' : 'Claude';
 
-      if (selectedModel === 'claude' && claudeAuthMode === 'free' && !userEmail) {
-        alert("Please enter your email to claim the free Claude tier runs.");
-        return;
+      if (currentAuthMode === 'free') {
+        if (!userEmail) {
+          alert(`Please enter your email to claim the free ${engineName} tier runs.`);
+          return;
+        }
+      } else {
+        if (selectedEngine === 'gemini' && !userGeminiKey) {
+          alert("Please enter your Google Gemini API key or switch to Free Tier.");
+          return;
+        }
+        if (selectedEngine === 'claude' && !userClaudeKey) {
+          alert("Please enter your Anthropic Claude API key or switch to Free Tier.");
+          return;
+        }
       }
 
       // UI State Transition
@@ -588,6 +1109,8 @@
       document.getElementById('welcomePlaceholder').classList.add('hidden');
       document.getElementById('resultCard').classList.add('hidden');
       document.getElementById('stepperCard').classList.remove('hidden');
+      const quickBar = document.getElementById('collapsedQuickBar');
+      if (quickBar) quickBar.classList.add('hidden');
 
       // Check if web research step applies
       const stepItem0 = document.getElementById('stepItem0');
@@ -607,10 +1130,11 @@
         topic: topic,
         company_name: topic,
         dossier_text: dossierText,
-        model_choice: selectedModel,
-        user_gemini_key: userGeminiKey || null,
-        user_claude_key: (selectedModel === 'claude' && claudeAuthMode === 'byok') ? userClaudeKey : null,
-        user_email: (selectedModel === 'claude' && claudeAuthMode === 'free') ? userEmail : null,
+        model_choice: selectedEngine,
+        mode: activeAnalysisMode,
+        user_gemini_key: (selectedEngine === 'gemini' && currentAuthMode === 'byok') ? userGeminiKey : null,
+        user_claude_key: (selectedEngine === 'claude' && currentAuthMode === 'byok') ? userClaudeKey : null,
+        user_email: currentAuthMode === 'free' ? userEmail : null,
         fingerprint: getDeviceFingerprint(),
         enable_debate: true,
         enable_voice: true
@@ -676,6 +1200,18 @@
         document.getElementById('stepProgressBadge').textContent = `Stage ${step} / 4`;
         document.getElementById('liveStatusText').textContent = event.message;
 
+        if (event.stage_key === 'research_done' && event.data) {
+          if (event.data.dossier_content) {
+            currentDossier = event.data.dossier_content;
+          }
+          const previewBox = document.getElementById('liveDossierPreviewBox');
+          if (previewBox && (event.data.dossier_preview || event.data.dossier_content)) {
+            previewBox.textContent = event.data.dossier_preview || (event.data.dossier_content.slice(0, 500) + '...');
+          }
+          const btnPreview = document.getElementById('btnPreviewDossierLive');
+          if (btnPreview) btnPreview.classList.remove('hidden');
+        }
+
         if (event.stage_key === 'theses_done' && event.data && event.data.theses) {
           const thesesBox = document.getElementById('liveThesesBox');
           const list = document.getElementById('thesesList');
@@ -694,34 +1230,218 @@
         highlightStage(4);
         const data = event.data;
         currentFinalMemo = data.final_memo;
+        if (data.dossier_content) {
+          currentDossier = data.dossier_content;
+        }
 
-        // Render Markdown Memo
-        document.getElementById('memoMarkdownContainer').innerHTML = marked.parse(data.final_memo);
-        document.getElementById('resultTitle').textContent = `Investment Memo: ${data.company_name}`;
+        claimsStore = {};
+        const claims = data.verified_claims || [];
+        claims.forEach(c => { claimsStore[c.id] = c; });
 
         // Set Badges
         const convictionBadge = document.getElementById('badgeConviction');
-        if (data.final_memo.includes("BUY")) {
-          convictionBadge.textContent = "BUY";
+        const memoText = data.final_memo || '';
+        if (memoText.includes("VALIDATED") || memoText.includes("BUY") || memoText.includes("RECOMMEND")) {
+          convictionBadge.textContent = memoText.includes("VALIDATED") ? "VALIDATED" : (memoText.includes("BUY") ? "BUY" : "RECOMMEND");
           convictionBadge.className = "px-2.5 py-1 rounded-full font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
-        } else if (data.final_memo.includes("PASS")) {
-          convictionBadge.textContent = "PASS";
+        } else if (memoText.includes("DISCONFIRMED") || memoText.includes("PASS") || memoText.includes("REJECT")) {
+          convictionBadge.textContent = memoText.includes("DISCONFIRMED") ? "DISCONFIRMED" : (memoText.includes("PASS") ? "PASS" : "REJECT");
           convictionBadge.className = "px-2.5 py-1 rounded-full font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30";
         } else {
-          convictionBadge.textContent = "CONDITIONAL";
+          convictionBadge.textContent = memoText.includes("CONSTRAINED") ? "CONSTRAINED" : "CONDITIONAL";
           convictionBadge.className = "px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30";
         }
 
-        document.getElementById('badgeSlop').textContent = `Slop: ${data.slop_score.toFixed(1)}/100`;
+        const claimsBadge = document.getElementById('badgeClaimsCount');
+        if (claimsBadge) {
+          claimsBadge.textContent = `${data.verified_claims_count || claims.length} Grounded Claims`;
+        }
         document.getElementById('badgeTraceability').textContent = data.traceability_passed ? "✓ 100% Traceability" : "⚠️ Traceability Flagged";
+
+        // Render Markdown Memo with Interactive Citation Tags
+        let parsedHtml = marked.parse(data.final_memo);
+        if (claims.length > 0) {
+          parsedHtml = parsedHtml.replace(/\[(C\d+)\]/g, (match, cid) => {
+            const claim = claimsStore[cid];
+            if (claim) {
+              const statementAttr = (claim.statement || '').replace(/"/g, '&quot;');
+              return `<button type="button" onclick="inspectClaim('${cid}')" class="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-mono font-semibold bg-indigo-950/70 hover:bg-indigo-700 text-indigo-300 hover:text-white border border-indigo-700/50 cursor-pointer transition shadow-xs" title="${statementAttr}">[${cid}]</button>`;
+            }
+            return match;
+          });
+        }
+        document.getElementById('memoMarkdownContainer').innerHTML = parsedHtml;
+        const isInvestmentMode = data.mode === 'investment' || memoText.includes("Investment Memo");
+        document.getElementById('resultTitle').textContent = isInvestmentMode ? `Investment Memo: ${data.company_name}` : `Research Synthesis: ${data.company_name}`;
+        const subtext = document.getElementById('deliverableSubtext');
+        if (subtext) {
+          subtext.textContent = isInvestmentMode ? "Investment Decision Deliverable" : "Synthesized Research Thesis";
+        }
+
+        // Render Dossier Content in Memo & Split Views
+        const dossierMarkdown = currentDossier || "_No research dossier content provided._";
+        const parsedDossier = marked.parse(dossierMarkdown);
+        document.getElementById('dossierMarkdownContainer').innerHTML = parsedDossier;
+        document.getElementById('splitDossierContainer').innerHTML = parsedDossier;
+        document.getElementById('splitMemoContainer').innerHTML = parsedHtml;
+
+        // Calculate and display word counts & compression ratio
+        const dossierWords = currentDossier ? currentDossier.trim().split(/\s+/).length : 0;
+        const memoWords = data.final_memo ? data.final_memo.trim().split(/\s+/).length : 0;
+        if (dossierWords > 0 && memoWords > 0) {
+          const compPercent = Math.max(0, Math.round((1 - (memoWords / dossierWords)) * 100));
+          document.getElementById('compressionRatioBadge').textContent = `${compPercent}% Compression (${dossierWords.toLocaleString()} → ${memoWords.toLocaleString()} words)`;
+          document.getElementById('dossierWordCount').textContent = `${dossierWords.toLocaleString()} words`;
+          document.getElementById('memoWordCount').textContent = `${memoWords.toLocaleString()} words`;
+        } else {
+          document.getElementById('compressionRatioBadge').textContent = `${memoWords.toLocaleString()} words synthesized`;
+        }
+
+        const sourceBadge = document.getElementById('dossierSourceBadge');
+        if (sourceBadge) {
+          sourceBadge.textContent = data.is_auto_researched ? "Web Search" : "Custom Upload";
+        }
+
+        // Initialize on Memo View
+        switchOutputView('memo');
+
+        // Populate Collapsible Claims Library
+        document.getElementById('claimsLibraryCount').textContent = claims.length;
+        const libraryList = document.getElementById('claimsLibraryList');
+        if (libraryList) {
+          libraryList.innerHTML = '';
+          claims.forEach(c => {
+            const item = document.createElement('div');
+            item.className = 'p-3 bg-dark-900/90 rounded-lg border border-slate-800 space-y-1.5 text-xs';
+            item.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">${c.id}</span>
+                  <span class="text-[10px] uppercase font-semibold text-slate-400">${c.claim_type || 'FACT'}</span>
+                  ${c.metric_or_data ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">${c.metric_or_data}</span>` : ''}
+                </div>
+                <button type="button" onclick="inspectClaim('${c.id}')" class="text-indigo-400 hover:text-indigo-200 text-[11px] transition">View Quote</button>
+              </div>
+              <div class="text-slate-200 font-medium">${c.statement}</div>
+              <div class="text-[11px] text-slate-400 italic bg-dark-950/60 p-2 rounded border border-slate-800/80 whitespace-pre-wrap">"${c.source_quote}"</div>
+            `;
+            libraryList.appendChild(item);
+          });
+        }
 
         // Display Result Card
         document.getElementById('resultCard').classList.remove('hidden');
         document.getElementById('stepperCard').classList.add('hidden');
 
+        // Collapse Research Subject modal & activate Google Scholar style header
+        collapseResearchSubjectModal(data.company_name);
+
         // Scroll to result smoothly
         document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
       }
+    }
+
+    let claimsStore = {};
+    let currentDossier = "";
+    let activeOutputView = 'memo';
+
+    function toggleLiveDossierPreview() {
+      const box = document.getElementById('liveDossierPreviewBox');
+      const btn = document.getElementById('btnPreviewDossierLive');
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        btn.textContent = "Hide Preview";
+      } else {
+        box.classList.add('hidden');
+        btn.textContent = "Preview Dossier";
+      }
+    }
+
+    function switchOutputView(mode) {
+      activeOutputView = mode;
+      const memoPane = document.getElementById('memoViewPane');
+      const dossierPane = document.getElementById('dossierViewPane');
+      const splitPane = document.getElementById('splitViewPane');
+
+      const tabMemo = document.getElementById('viewTabMemo');
+      const tabDossier = document.getElementById('viewTabDossier');
+      const tabSplit = document.getElementById('viewTabSplit');
+
+      // Hide all panes first
+      memoPane.classList.add('hidden');
+      dossierPane.classList.add('hidden');
+      splitPane.classList.add('hidden');
+
+      // Reset button styles
+      [tabMemo, tabDossier, tabSplit].forEach(btn => {
+        btn.className = "px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 flex items-center space-x-1.5 cursor-pointer";
+      });
+
+      if (mode === 'memo') {
+        memoPane.classList.remove('hidden');
+        tabMemo.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-800 text-emerald-400 border border-slate-700 shadow-xs flex items-center space-x-1.5 cursor-pointer";
+      } else if (mode === 'dossier') {
+        dossierPane.classList.remove('hidden');
+        tabDossier.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-800 text-indigo-400 border border-slate-700 shadow-xs flex items-center space-x-1.5 cursor-pointer";
+      } else if (mode === 'split') {
+        splitPane.classList.remove('hidden');
+        tabSplit.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-800 text-emerald-400 border border-slate-700 shadow-xs flex items-center space-x-1.5 cursor-pointer";
+      }
+    }
+
+    function copyDossier() {
+      if (!currentDossier) return;
+      navigator.clipboard.writeText(currentDossier);
+      alert("Research dossier copied to clipboard!");
+    }
+
+    function downloadDossier() {
+      if (!currentDossier) return;
+      const topic = document.getElementById('topicInput').value.trim() || 'research';
+      const filename = `${topic.toLowerCase().replace(/[^a-z0-9]/g, '_')}_dossier.md`;
+      const blob = new Blob([currentDossier], { type: 'text/markdown;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    function toggleClaimsLibrary() {
+      const panel = document.getElementById('claimsLibraryPanel');
+      const text = document.getElementById('claimsToggleText');
+      const icon = document.getElementById('claimsToggleIcon');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        text.textContent = 'Click to collapse';
+        icon.classList.add('rotate-180');
+      } else {
+        panel.classList.add('hidden');
+        text.textContent = 'Click to expand';
+        icon.classList.remove('rotate-180');
+      }
+    }
+
+    function inspectClaim(cid) {
+      const claim = claimsStore[cid];
+      if (!claim) return;
+      document.getElementById('modalClaimId').textContent = claim.id;
+      document.getElementById('modalClaimType').textContent = (claim.claim_type || 'FACT').toUpperCase();
+      document.getElementById('modalClaimStatement').textContent = claim.statement;
+      
+      const metricBox = document.getElementById('modalMetricBox');
+      if (claim.metric_or_data) {
+        document.getElementById('modalClaimMetric').textContent = claim.metric_or_data;
+        metricBox.classList.remove('hidden');
+      } else {
+        metricBox.classList.add('hidden');
+      }
+
+      document.getElementById('modalClaimQuote').textContent = `"${claim.source_quote}"`;
+      document.getElementById('claimModal').classList.remove('hidden');
+    }
+
+    function closeClaimModal() {
+      document.getElementById('claimModal').classList.add('hidden');
     }
 
     function showError(msg) {
@@ -748,6 +1468,50 @@
       link.download = filename;
       link.click();
     }
+
+    // Auto-restore saved email on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedEmail = localStorage.getItem('thesis_user_email');
+      if (savedEmail) {
+        const emailInput = document.getElementById('userEmailInput');
+        if (emailInput) {
+          emailInput.value = savedEmail;
+          refreshQuota();
+        }
+      }
+    });
   </script>
+
+  <!-- Claim Inspector Modal -->
+  <div id="claimModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+    <div class="bg-dark-800 border border-slate-700 rounded-2xl max-w-xl w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700/80 pb-3">
+        <div class="flex items-center space-x-2">
+          <span id="modalClaimId" class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">C1</span>
+          <span id="modalClaimType" class="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-slate-800 text-slate-300">FACT</span>
+        </div>
+        <button type="button" onclick="closeClaimModal()" class="text-slate-400 hover:text-white transition cursor-pointer p-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div>
+        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Grounded Assertion</div>
+        <p id="modalClaimStatement" class="text-sm text-slate-200 font-medium"></p>
+      </div>
+      <div id="modalMetricBox" class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-800">
+        <span class="text-[11px] text-slate-400">Audited Metric / Figure:</span>
+        <span id="modalClaimMetric" class="ml-1 text-xs font-mono font-bold text-emerald-400"></span>
+      </div>
+      <div>
+        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Verbatim Source Quote in Dossier</div>
+        <blockquote id="modalClaimQuote" class="text-xs text-slate-300 italic bg-dark-900/90 p-3 rounded-lg border-l-2 border-indigo-500 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap"></blockquote>
+      </div>
+      <div class="text-right pt-1">
+        <button type="button" onclick="closeClaimModal()" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

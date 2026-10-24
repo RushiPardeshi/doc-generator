@@ -23,28 +23,30 @@ TOPIC TO RESEARCH:
 {topic}
 
 INSTRUCTIONS:
-1. Search the live web for the most up-to-date and reliable empirical data, financial metrics, technical benchmarks, and factual statements.
+1. Search the live web for the most up-to-date and reliable empirical data, technical benchmarks, performance metrics, and factual statements.
 2. Structure the dossier cleanly in Markdown with the following sections:
    # Research Dossier: {topic}
-   
+
    ## 1. Executive Summary & Overview
-   - Concise factual overview of the company, subject, or technology.
-   
-   ## 2. Empirical Metrics & Key Data Points
-   - Explicitly list numbers, revenues, valuation, growth rates, dates, benchmark scores, or operational metrics.
+   - Concise factual overview of the subject, model, technology, or company.
+
+   ## 2. Empirical Metrics & Key Benchmark Data
+   - Explicitly list numbers, benchmark scores, throughput/latency, parameters, accuracy, or financial metrics.
    - Every metric should cite its source or context.
-   
-   ## 3. Structural Advantages & Catalysts
-   - Concrete competitive moats, market share, product differentiation, or regulatory tailwinds.
-   
-   ## 4. Operational Vulnerabilities, Headwinds & Downside Risks
-   - Specific failure points, competition, margin pressures, customer churn, or execution hazards.
-   
+
+   ## 3. Structural Mechanisms & Core Advantages
+   - Concrete architectural innovations, mathematical/algorithmic mechanisms, efficiency gains, or competitive advantages.
+
+   ## 4. Technical Constraints, Bottlenecks & Failure Modes
+   - Specific failure points, computational/memory overhead, trade-offs, scalability limits, or execution hazards.
+
    ## 5. Key Factual Statements & Excerpts
-   - 5 to 10 unambiguous factual sentences or quotes directly reported in recent disclosures, financial reports, or news.
+   - 5 to 10 unambiguous factual sentences or quotes directly reported in research papers, technical benchmarks, or disclosures.
+
+3. NEWLINE DISCIPLINE: Always use a blank line (double newline) after each topic, heading, and list item. Never run text directly beneath a heading without an empty line.
 
 CRITICAL INVARIANT:
-Do NOT output vague marketing fluff or generic platitudes. Include specific numbers, percentages, dates, dollar amounts, and entity names so downstream analysts can verify every claim.
+Do NOT output vague marketing fluff or generic platitudes. Include specific numbers, percentages, dates, parameter sizes, benchmark datasets, and entity names so downstream analysts can verify every claim.
 """
 
 

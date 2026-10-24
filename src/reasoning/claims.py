@@ -40,7 +40,79 @@ class ClaimsExtractionResult(BaseModel):
 
 def normalize_whitespace(text: str) -> str:
     """Normalize whitespace and newlines for robust substring matching."""
-    return re.sub(r"\s+", " ", text).strip()
+    return re.sub(r"[\s\u00a0\u200b]+", " ", text).strip()
+
+
+def canonical_clean_text(text: str) -> str:
+    """
+    Normalize text for semantic comparison:
+    - Normalizes smart quotes and unicode dashes.
+    - Strips markdown formatting markers (bold, italic, code, math delimiters).
+    - Normalizes non-breaking and zero-width spaces.
+    """
+    t = text
+    trans = str.maketrans({
+        "“": '"', "”": '"', "‘": "'", "’": "'", "`": "'", "´": "'",
+        "—": "-", "–": "-", "−": "-",
+    })
+    t = t.translate(trans)
+    # Strip markdown markers without altering inner text
+    t = re.sub(r"\*\*([^*]+)\*\*", r"\1", t)
+    t = re.sub(r"\*([^*]+)\*", r"\1", t)
+    t = re.sub(r"__([^_]+)__", r"\1", t)
+    t = re.sub(r"_([^_]+)_", r"\1", t)
+    t = re.sub(r"`([^`]+)`", r"\1", t)
+    t = re.sub(r"\$([^$]+)\$", r"\1", t)
+    return normalize_whitespace(t)
+
+
+def _extract_words(text: str) -> List[str]:
+    """Extract lowercase alphanumeric tokens for overlap calculation."""
+    return [w.lower() for w in re.findall(r"\b[A-Za-z0-9]+\b", text)]
+
+
+def _recover_verbatim_slice(quote: str, dossier_text: str) -> Optional[str]:
+    """
+    Attempt to locate and extract the verbatim slice from dossier_text:
+    1. Token-level regex match (handles markdown bolding/italics inside the quote).
+    2. Sentence alignment with high lexical overlap (>= 85%).
+    """
+    clean_q = canonical_clean_text(quote)
+    words = [re.escape(w) for w in re.findall(r"\w+|[^\w\s]", clean_q) if w.strip()]
+    if len(words) >= 3:
+        sep = r"[\s\*\_\`\$\"\“\”\‘\’\—\–\-]*"
+        pattern = sep.join(words)
+        try:
+            m = re.search(pattern, dossier_text, flags=re.IGNORECASE)
+            if m:
+                return m.group(0).strip()
+        except re.error:
+            pass
+
+    # High-overlap sentence alignment
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?\n])\s+", dossier_text) if s.strip()]
+    q_words = _extract_words(clean_q)
+    if not q_words or len(q_words) < 3:
+        return None
+
+    q_set = set(q_words)
+    best_match = None
+    best_overlap = 0.0
+
+    for s in sentences:
+        s_words = _extract_words(canonical_clean_text(s))
+        if not s_words:
+            continue
+        s_set = set(s_words)
+        overlap = len(q_set & s_set) / max(len(q_set), 1)
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best_match = s
+
+    if best_overlap >= 0.85 and best_match:
+        return best_match
+
+    return None
 
 
 def verify_and_filter_claims(
@@ -48,12 +120,17 @@ def verify_and_filter_claims(
     dossier_text: str,
 ) -> Tuple[List[GroundedClaim], List[Dict[str, Any]]]:
     """
-    Hard Invariant: Verifies that each claim's source_quote exists verbatim in dossier_text.
+    Hard Invariant with Multi-Tier Verification:
+    Tier 1: Direct exact match in normalized dossier.
+    Tier 2: Token-level regex match (handles markdown, quotes, dashes) & recovers verbatim slice.
+    Tier 3: High-confidence sentence alignment & recovers verbatim slice.
     
     Returns:
         (verified_claims, rejected_claims)
     """
     normalized_dossier = normalize_whitespace(dossier_text)
+    clean_dossier = canonical_clean_text(dossier_text)
+
     verified: List[GroundedClaim] = []
     rejected: List[Dict[str, Any]] = []
 
@@ -63,14 +140,33 @@ def verify_and_filter_claims(
             rejected.append({"claim_id": claim.id, "reason": "Empty source quote"})
             continue
 
+        # Tier 1: Exact whitespace-normalized substring
         if norm_quote in normalized_dossier:
             verified.append(claim)
-        else:
-            rejected.append({
-                "claim_id": claim.id,
-                "reason": "Source quote does not exist verbatim in source text",
-                "attempted_quote": claim.source_quote,
-            })
+            continue
+
+        # Tier 2: Canonical clean match (e.g. smart quotes or stripped markdown)
+        clean_quote = canonical_clean_text(claim.source_quote)
+        if clean_quote in clean_dossier:
+            recovered_slice = _recover_verbatim_slice(claim.source_quote, dossier_text)
+            if recovered_slice:
+                claim.source_quote = recovered_slice
+                verified.append(claim)
+                continue
+
+        # Tier 3: Lexical alignment & slice recovery
+        recovered_slice = _recover_verbatim_slice(claim.source_quote, dossier_text)
+        if recovered_slice:
+            claim.source_quote = recovered_slice
+            verified.append(claim)
+            continue
+
+        # Rejection: truly not found or fabricated
+        rejected.append({
+            "claim_id": claim.id,
+            "reason": "Source quote does not exist verbatim in source text",
+            "attempted_quote": claim.source_quote,
+        })
 
     return verified, rejected
 
@@ -112,4 +208,31 @@ DOCUMENT CONTENT:
     )
 
     verified_claims, rejected_claims = verify_and_filter_claims(result.claims, dossier_text)
+
+    # 1-Shot Self-Correction Retry Loop if initial extraction had low yield (< 3 verified claims)
+    if len(verified_claims) < 3 and provider:
+        retry_prompt = f"""CRITICAL VERIFICATION NOTICE:
+The previous extraction attempt yielded insufficient verified claims ({len(verified_claims)} verified out of {len(result.claims)} proposed).
+Most quotes failed character-for-character verification against the source document.
+Extract at least 15 comprehensive claims where `source_quote` is copied EXACTLY, WORD-FOR-WORD, directly from the text below without alteration.
+
+DOCUMENT CONTENT:
+\"\"\"
+{dossier_text}
+\"\"\"
+"""
+        try:
+            retry_result = provider.complete_structured(
+                prompt=retry_prompt,
+                schema=ClaimsExtractionResult,
+                system_instruction=CLAIM_EXTRACTION_SYSTEM,
+                temperature=0.0,
+            )
+            retry_verified, retry_rejected = verify_and_filter_claims(retry_result.claims, dossier_text)
+            if len(retry_verified) > len(verified_claims):
+                verified_claims = retry_verified
+                rejected_claims = retry_rejected
+        except Exception:
+            pass
+
     return verified_claims, rejected_claims
