@@ -15,6 +15,9 @@ RESEARCH_FALLBACK_MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
     "gemini-3.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
 ]
 
 
@@ -111,8 +114,15 @@ def compile_research_dossier(
                 contents=prompt,
                 config=config,
             )
-            if response.text and len(response.text.strip()) > 100:
-                return response.text.strip()
+            text = response.text
+            if not text and getattr(response, "candidates", None) and response.candidates:
+                cand = response.candidates[0]
+                if getattr(cand, "content", None) and getattr(cand.content, "parts", None):
+                    text_parts = [p.text for p in cand.content.parts if getattr(p, "text", None)]
+                    if text_parts:
+                        text = "".join(text_parts)
+            if text and len(text.strip()) > 100:
+                return text.strip()
         except errors.APIError as e:
             last_error = e
             status = getattr(e, "code", None) or getattr(e, "status_code", None)

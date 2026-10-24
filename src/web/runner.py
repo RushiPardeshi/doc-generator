@@ -176,6 +176,9 @@ async def stream_pipeline_execution(
                     research_prompt,
                     f"You are an elite research analyst compiling a comprehensive, fact-rich research dossier with explicit metrics, dates, percentages, and citations as of {current_date}.",
                 )
+                if not dossier_content or len(dossier_content.strip()) < 50:
+                    raise RuntimeError("Model returned an empty or insufficient research dossier.")
+
                 yield {
                     "event": "progress",
                     "stage_key": "research_done",
@@ -193,6 +196,18 @@ async def stream_pipeline_execution(
                     "message": f"Automated web research failed: {str(e)}. Fallback via {engine_name} also failed: {str(fallback_err)}. If free quota is resting, please paste your research dossier directly into the 'Paste / Upload' tab.",
                 }
                 return
+
+    # Invariant: Prevent pipeline execution if dossier is empty
+    if not dossier_content or len(dossier_content.strip()) < 50:
+        yield {
+            "event": "error",
+            "message": (
+                f"No research content available for '{req.topic}' (dossier length: {len(dossier_content.strip()) if dossier_content else 0} chars). "
+                "Please verify that GEMINI_API_KEY is configured in your Render Environment Variables, "
+                "switch to 'My API Key' in the access settings, or paste text directly into '📄 Paste / Upload'."
+            ),
+        }
+        return
 
     # 3. Synchronous Pipeline Execution in Background Thread
     def progress_callback(stage_key: str, message: str, step: int, total_steps: int, data: Optional[Dict[str, Any]] = None):

@@ -20,6 +20,9 @@ FALLBACK_MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-3.1-pro-preview",
     "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
 ]
 
 
@@ -122,7 +125,16 @@ class GeminiProvider:
                     output_tokens=getattr(meta, "candidates_token_count", 0) or 0,
                     total_tokens=getattr(meta, "total_token_count", 0) or 0,
                 )
-            return response.text or ""
+            text = response.text
+            if not text and getattr(response, "candidates", None) and response.candidates:
+                cand = response.candidates[0]
+                if getattr(cand, "content", None) and getattr(cand.content, "parts", None):
+                    text_parts = [p.text for p in cand.content.parts if getattr(p, "text", None)]
+                    if text_parts:
+                        text = "".join(text_parts)
+            if not text:
+                raise RuntimeError(f"Model {model_name} produced an empty response candidate.")
+            return text
 
         return self._execute_with_resilience(_call)
 
