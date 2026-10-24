@@ -53,6 +53,12 @@ CRITICAL INVARIANTS:
 7. PLAIN LANGUAGE & CAUSAL CLARITY:
    - State findings, unit economics, and failure modes in plain, direct English. Avoid dense buzzwords and pretentious financial shorthand.
    - Ground abstract concepts in concrete operational realities (e.g., explain what happens to money, customers, or systems rather than writing "the contribution margin is structurally fragile" or "exhibits asymmetric downside vector").
+8. ZERO META-TALK & PROMPT LEAKAGE:
+   - Never write about the memo, prompt, or thesis itself. FORBIDDEN: "The thesis survives only within these guardrails", "The argument holds", "opinion-based heuristic, not a rigorously derived cost model".
+   - Speak exclusively about the actual company, technology, costs, and data.
+9. KEEP CONCRETE EXAMPLES & NUMBERS (NO ABSTRACT OBFUSCATION):
+   - When cited claims contain specific dollar ranges, credit rates, or row counts, retain those exact numbers in your explanation. Never replace concrete metrics with vague phrases like "cell density and provider mix" or "compounding capabilities".
+   - Use subject-first sentences (e.g., "Clay costs $149–$800/month...", not "Above this threshold, and specifically for teams with..."). Keep sentences short and digestible.
 """
 
 
@@ -91,6 +97,7 @@ def synthesize_minto_draft(
     if mode == "research":
         prompt = f"""Synthesize an Answer-First Research Synthesis & Thesis for {company_name}.
 Focus on the core technical mechanism, empirical benchmark results, structural constraints, and falsification boundaries. Do NOT frame this as an IT procurement, business purchase, or deploy/reject decision.
+Write with subject-first sentences and preserve concrete metrics from the claims. Do not write meta-commentary like 'the thesis survives within these guardrails'.
 
 SYNTHESIS STATUS: {stance.value}
 {thesis_info}
@@ -103,6 +110,7 @@ VERIFIED CLAIMS (USE THESE EXACT METRICS AND CITE IDS [C#]):
 """
     else:
         prompt = f"""Draft a Minto Pyramid Research & Decision Memo for {company_name}.
+Write with subject-first sentences and preserve concrete pricing and numbers from the claims. Do not write meta-commentary like 'the thesis survives within these guardrails' or 'heuristic vs cost model'.
 
 DECISION / STANCE: {stance.value}
 {thesis_info}

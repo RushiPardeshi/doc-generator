@@ -1,6 +1,7 @@
 """Pipeline execution runner with asynchronous SSE queue streaming."""
 
 import asyncio
+from datetime import datetime
 from typing import AsyncGenerator, Optional, Dict, Any
 from pydantic import BaseModel
 
@@ -167,12 +168,13 @@ async def stream_pipeline_execution(
                 "data": None,
             }
             try:
-                research_prompt = RESEARCH_PROMPT_TEMPLATE.format(topic=req.topic)
+                current_date = datetime.now().strftime("%B %Y")
+                research_prompt = RESEARCH_PROMPT_TEMPLATE.format(topic=req.topic, current_date=current_date)
                 dossier_content = await loop.run_in_executor(
                     None,
                     provider.complete,
                     research_prompt,
-                    "You are an elite research analyst compiling a comprehensive, fact-rich research dossier with explicit metrics, dates, percentages, and citations.",
+                    f"You are an elite research analyst compiling a comprehensive, fact-rich research dossier with explicit metrics, dates, percentages, and citations as of {current_date}.",
                 )
                 yield {
                     "event": "progress",

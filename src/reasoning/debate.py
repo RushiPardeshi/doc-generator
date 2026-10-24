@@ -103,7 +103,7 @@ RULES:
 2. Score each thesis's survival on a 1.0 to 10.0 scale.
 3. If a thesis relies on hand-waving or cannot withstand the failure mode, mark `survived = False`.
 4. Derive concrete `falsification_triggers` tied directly to the claims (e.g. 'If metric X degrades from Y below Z').
-5. ARBITRATION DISCIPLINE: If the empirical evidence proves the thesis works well within a defined operating envelope (e.g., specific workloads, parameter ranges, or constraints) but fails outside them, select `final_stance = 'CONDITIONAL'` with strict operational guardrails. Select `final_stance = 'REJECT'` (or 'PASS') ONLY if the thesis is structurally defective across all viable operating regimes.
+5. ARBITRATION DISCIPLINE: If the empirical evidence proves the thesis works well within a defined operating envelope (e.g., specific workloads, parameter ranges, or constraints) but fails outside them, select `final_stance = 'CONDITIONAL'` with clear operational constraints. Select `final_stance = 'REJECT'` (or 'PASS') ONLY if the thesis is structurally defective across all viable operating regimes. In `arbitration_summary`, describe practical boundaries and numbers directly; do NOT output meta-language like 'The thesis survives only within these guardrails'.
 """
 
 

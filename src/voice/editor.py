@@ -31,6 +31,13 @@ STYLE INVARIANTS:
      * INSTEAD OF: "Exhibits asymmetric downside multiple compression risk."
      * WRITE: "The valuation will drop sharply if revenue growth slows even slightly."
    - Favor active, concrete verbs over stacked abstract nouns (use "margins drop" or "costs rise" rather than "structural margin degradation" or "cost-profile escalation").
+9. BAN META-PROMPT LEAKAGE & EPISTEMIC PONTIFICATING:
+   - Never write about the memo, thesis, or reasoning process itself.
+   - FORBIDDEN META-PHRASES: "The thesis survives only within...", "within these guardrails", "the argument holds", "opinion-based heuristic, not a rigorously derived cost model", "the pre-mortem critique indicates".
+   - Speak directly about the real-world subject, its users, and its costs. For example, instead of writing "The 500/month breakeven is an opinion-based heuristic", write "The 500/month threshold is a conservative rule of thumb".
+10. PRESERVE CONCRETE DATA & SUBJECT-FIRST SENTENCES:
+   - When claims provide specific numbers, costs, or real-world examples (like credit burn, pricing tiers, row counts), keep those concrete numbers in the prose rather than abstracting them into high-level categories (e.g. say "using 5 data sources and AI cells", NOT "provider mix and cell density").
+   - Start sentences with the active subject and verb. Never stack multiple introductory dependent clauses (e.g. avoid "Above this threshold, and specifically for teams running X, Y does Z"). Keep sentences under 25 words.
 """
 
 
@@ -54,7 +61,7 @@ def edit_memo(
         f"[{c.id}: {c.metric_or_data}]" for c in claims if c.metric_or_data
     )
 
-    prompt = f"""Rewrite and edit the following executive research document to sharpen analytical tone, enforce plain-language clarity (translating dense Wall Street or consulting buzzwords into direct real-world effects), maintain scannable markdown formatting with blank lines after each heading/topic, and eliminate generic AI clichés.
+    prompt = f"""Rewrite and edit the following executive research document to sharpen analytical tone, enforce plain-language clarity, eliminate meta-commentary (never write 'the thesis survives', 'within guardrails', or 'heuristic vs cost model'), retain concrete numbers and costs from cited claims rather than abstracting them, maintain scannable markdown formatting with blank lines after each heading/topic, and eliminate generic AI clichés.
 
 DELIVERABLE TYPE: {mode.upper()} SYNTHESIS
 {violations_text}

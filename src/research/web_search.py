@@ -2,6 +2,7 @@
 
 import os
 import time
+from datetime import datetime
 from typing import Optional, List
 from google import genai
 from google.genai import types
@@ -16,23 +17,45 @@ RESEARCH_FALLBACK_MODELS = [
     "gemini-3.5-flash",
 ]
 
-RESEARCH_PROMPT_TEMPLATE = """You are a senior forensic equity research analyst and investigative technology researcher.
+
+class _PromptTemplate(str):
+    """String template that automatically injects current_date if omitted."""
+    def format(self, *args, **kwargs):
+        if "current_date" not in kwargs:
+            kwargs["current_date"] = datetime.now().strftime("%B %Y")
+        return super().format(*args, **kwargs)
+
+
+RESEARCH_PROMPT_TEMPLATE = _PromptTemplate("""You are a senior forensic equity research analyst and investigative technology researcher.
 Your task is to conduct in-depth, verified web research on the following topic and assemble a comprehensive, fact-rich Research Dossier.
+
+TEMPORAL ANCHOR & SEARCH RECENCY INSTRUCTIONS:
+1. TODAY'S DATE: {current_date}.
+2. LIVE RECENCY REQUIREMENT:
+   - When searching the web, specifically search for the latest real-time data, announcements, and metrics as of {current_date}.
+   - Append the current year or recency qualifiers to your search queries to avoid pulling stale cached snippets from old search results or archived websites.
+3. FAST-MOVING OPERATIONAL METRICS (TEAM SIZE / HEADCOUNT / PRICING / FUNDING):
+   - Fast-growing startups and tech companies change team size, pricing tiers, and product features rapidly.
+   - Do NOT rely on stale cached snippets from months or years ago (e.g. outdated LinkedIn search preview snippets or secondary directory profiles like Crunchbase/Tracxn from past quarters).
+   - Search specifically for recent updates, company press releases, the company's live `/careers` or `/about` pages, or verified recent news disclosures.
+   - If a metric (such as employee headcount or round valuation) is based on older disclosures or third-party estimates, explicitly state its exact date and caveat (e.g. "Reported ~X employees as of [Specific Date], though recent scaling indicates higher current headcount"). Never present an old cached estimate as current reality.
+4. PRIMARY SOURCE PREFERENCE:
+   - Prioritize verified primary sources: official documentation, product changelogs, live pricing pages, GitHub releases/commits, and recent regulatory disclosures.
 
 TOPIC TO RESEARCH:
 {topic}
 
 INSTRUCTIONS:
-1. Search the live web for the most up-to-date and reliable empirical data, technical benchmarks, performance metrics, and factual statements.
+1. Search the live web for the most up-to-date and reliable empirical data, technical benchmarks, performance metrics, and factual statements as of {current_date}.
 2. Structure the dossier cleanly in Markdown with the following sections:
    # Research Dossier: {topic}
 
    ## 1. Executive Summary & Overview
-   - Concise factual overview of the subject, model, technology, or company.
+   - Concise factual overview of the subject, model, technology, or company as of {current_date}.
 
    ## 2. Empirical Metrics & Key Benchmark Data
    - Explicitly list numbers, benchmark scores, throughput/latency, parameters, accuracy, or financial metrics.
-   - Every metric should cite its source or context.
+   - Every metric should cite its source and reporting date/period (e.g., "Source: Official Pricing Page, {current_date}").
 
    ## 3. Structural Mechanisms & Core Advantages
    - Concrete architectural innovations, mathematical/algorithmic mechanisms, efficiency gains, or competitive advantages.
@@ -47,13 +70,14 @@ INSTRUCTIONS:
 
 CRITICAL INVARIANT:
 Do NOT output vague marketing fluff or generic platitudes. Include specific numbers, percentages, dates, parameter sizes, benchmark datasets, and entity names so downstream analysts can verify every claim.
-"""
+""")
 
 
 def compile_research_dossier(
     topic: str,
     api_key: Optional[str] = None,
     preferred_model: Optional[str] = None,
+    as_of_date: Optional[str] = None,
 ) -> str:
     """
     Query Gemini with Google Search Grounding to build a structured research dossier.
@@ -72,7 +96,8 @@ def compile_research_dossier(
         if m not in models_to_try:
             models_to_try.append(m)
 
-    prompt = RESEARCH_PROMPT_TEMPLATE.format(topic=topic)
+    current_date = as_of_date or datetime.now().strftime("%B %Y")
+    prompt = RESEARCH_PROMPT_TEMPLATE.format(topic=topic, current_date=current_date)
     last_error: Optional[Exception] = None
 
     for model_name in models_to_try:
