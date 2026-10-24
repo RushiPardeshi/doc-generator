@@ -12,12 +12,12 @@ from src.config import GEMINI_API_KEY, GEMINI_MODEL
 
 RESEARCH_FALLBACK_MODELS = [
     GEMINI_MODEL,
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
-    "gemini-3.5-flash",
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
 ]
 
 
@@ -104,40 +104,42 @@ def compile_research_dossier(
     last_error: Optional[Exception] = None
 
     for model_name in models_to_try:
-        try:
-            config = types.GenerateContentConfig(
-                tools=[types.Tool(google_search=types.GoogleSearch())],
-                temperature=0.2,
-            )
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=config,
-            )
-            text = response.text
-            if not text and getattr(response, "candidates", None) and response.candidates:
-                cand = response.candidates[0]
-                if getattr(cand, "content", None) and getattr(cand.content, "parts", None):
-                    text_parts = [p.text for p in cand.content.parts if getattr(p, "text", None)]
-                    if text_parts:
-                        text = "".join(text_parts)
-            if text and len(text.strip()) > 100:
-                return text.strip()
-        except errors.APIError as e:
-            last_error = e
-            status = getattr(e, "code", None) or getattr(e, "status_code", None)
-            if status == 429:
-                # Rate limit encountered: try next fallback model
-                continue
-            elif status == 503:
-                time.sleep(2)
-                continue
-            else:
-                # Other API error, continue to fallback model
-                continue
-        except Exception as e:
-            last_error = e
-            continue
+        for attempt in range(3):
+            try:
+                config = types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=0.2,
+                )
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=config,
+                )
+                text = response.text
+                if not text and getattr(response, "candidates", None) and response.candidates:
+                    cand = response.candidates[0]
+                    if getattr(cand, "content", None) and getattr(cand.content, "parts", None):
+                        text_parts = [p.text for p in cand.content.parts if getattr(p, "text", None)]
+                        if text_parts:
+                            text = "".join(text_parts)
+                if text and len(text.strip()) > 100:
+                    return text.strip()
+            except errors.APIError as e:
+                last_error = e
+                status = getattr(e, "code", None) or getattr(e, "status_code", None)
+                if status == 503 or "503" in str(e) or "high demand" in str(e).lower():
+                    # High demand on this model: backoff and retry
+                    time.sleep(2 ** (attempt + 1))
+                    continue
+                elif status in (404, 429) or "404" in str(e) or "429" in str(e):
+                    # Model deprecated / not found or quota exhausted: try next model
+                    break
+                else:
+                    time.sleep(1)
+                    continue
+            except Exception as e:
+                last_error = e
+                break
 
     raise RuntimeError(
         f"Unable to compile research dossier for '{topic}'. "

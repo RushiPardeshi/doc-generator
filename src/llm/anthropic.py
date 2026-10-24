@@ -15,8 +15,11 @@ T = TypeVar("T", bound=BaseModel)
 ANTHROPIC_FALLBACK_MODELS = [
     "claude-sonnet-4-6",
     "claude-sonnet-5",
+    "claude-3-7-sonnet-latest",
+    "claude-3-5-sonnet-latest",
     "claude-haiku-4-5-20251001",
     "claude-sonnet-4-5-20250929",
+    "claude-3-5-haiku-latest",
 ]
 
 
@@ -69,7 +72,7 @@ class AnthropicProvider:
                 "model": model_name,
                 "max_tokens": max_tokens,
                 "messages": [{"role": "user", "content": prompt}],
-                "extra_body": {"temperature": temperature},
+                "temperature": temperature,
             }
             if system_instruction:
                 kwargs["system"] = system_instruction
@@ -114,7 +117,7 @@ class AnthropicProvider:
                 "messages": [{"role": "user", "content": prompt}],
                 "tools": tools,
                 "tool_choice": {"type": "tool", "name": tool_name},
-                "extra_body": {"temperature": temperature},
+                "temperature": temperature,
             }
             if system_instruction:
                 kwargs["system"] = system_instruction
