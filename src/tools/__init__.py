@@ -12,6 +12,11 @@ from src.tools.serp_research import (
     compile_references_to_dossier_section,
 )
 
+from src.tools.tavily_search import (
+    fetch_tavily_search,
+    format_tavily_dossier,
+)
+
 __all__ = [
     "CompanyFinancialMetrics",
     "fetch_financial_metrics",
@@ -20,4 +25,6 @@ __all__ = [
     "fetch_semantic_scholar_references",
     "fetch_authoritative_research",
     "compile_references_to_dossier_section",
+    "fetch_tavily_search",
+    "format_tavily_dossier",
 ]

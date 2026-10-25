@@ -72,7 +72,6 @@ class AnthropicProvider:
                 "model": model_name,
                 "max_tokens": max_tokens,
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": temperature,
             }
             if system_instruction:
                 kwargs["system"] = system_instruction
@@ -117,7 +116,6 @@ class AnthropicProvider:
                 "messages": [{"role": "user", "content": prompt}],
                 "tools": tools,
                 "tool_choice": {"type": "tool", "name": tool_name},
-                "temperature": temperature,
             }
             if system_instruction:
                 kwargs["system"] = system_instruction

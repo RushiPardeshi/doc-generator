@@ -131,7 +131,7 @@ async def stream_pipeline_execution(
         yield {
             "event": "progress",
             "stage_key": "research_start",
-            "message": f"Initiating live web research for '{req.topic}' using Search Grounding...",
+            "message": f"Initiating live web research for '{req.topic}'...",
             "step": 0,
             "total_steps": 4,
             "data": None,
@@ -148,7 +148,7 @@ async def stream_pipeline_execution(
             yield {
                 "event": "progress",
                 "stage_key": "research_done",
-                "message": f"Successfully compiled empirical research dossier via Google Search Grounding ({len(dossier_content)} characters).",
+                "message": f"Successfully compiled empirical research dossier via live web research ({len(dossier_content)} characters).",
                 "step": 0,
                 "total_steps": 4,
                 "data": {

@@ -9,15 +9,13 @@ from google.genai import types
 from google.genai import errors
 
 from src.config import GEMINI_API_KEY, GEMINI_MODEL
+from src.tools.tavily_search import fetch_tavily_search, format_tavily_dossier
 
 RESEARCH_FALLBACK_MODELS = [
     GEMINI_MODEL,
-    "gemini-3.6-flash",
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
 ]
 
 
@@ -81,14 +79,26 @@ def compile_research_dossier(
     api_key: Optional[str] = None,
     preferred_model: Optional[str] = None,
     as_of_date: Optional[str] = None,
+    tavily_key: Optional[str] = None,
 ) -> str:
     """
-    Query Gemini with Google Search Grounding to build a structured research dossier.
-    Iterates through fallback models if rate limits (429) or high-demand (503) errors occur.
+    Search the web to compile a grounded research dossier.
+    Tries Tavily first (independent of LLM provider), then falls back to Gemini Search Grounding.
     """
+    # 1. Primary: Tavily Real-Time Web Search
+    try:
+        tavily_results = fetch_tavily_search(topic, api_key=tavily_key, max_results=5)
+        if tavily_results:
+            dossier = format_tavily_dossier(tavily_results, topic)
+            if len(dossier.strip()) > 100:
+                return dossier.strip()
+    except Exception:
+        pass
+
+    # 2. Secondary Fallback: Gemini with Google Search Grounding
     key = api_key or GEMINI_API_KEY
     if not key:
-        raise ValueError("No Gemini API key available. Provide a key or configure GEMINI_API_KEY.")
+        raise ValueError("No Gemini or Tavily search provider available. Configure TAVILY_API_KEY or GEMINI_API_KEY.")
 
     client = genai.Client(api_key=key)
 
@@ -122,8 +132,9 @@ def compile_research_dossier(
                         text_parts = [p.text for p in cand.content.parts if getattr(p, "text", None)]
                         if text_parts:
                             text = "".join(text_parts)
-                if text and len(text.strip()) > 100:
+                if text and len(text.strip()) > 30:
                     return text.strip()
+                last_error = RuntimeError(f"Model {model_name} returned insufficient text for '{topic}'")
             except errors.APIError as e:
                 last_error = e
                 status = getattr(e, "code", None) or getattr(e, "status_code", None)
