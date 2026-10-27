@@ -77,6 +77,12 @@ def serve_index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
 
+@app.get("/about", response_class=HTMLResponse)
+def serve_about(request: Request):
+    """Serve the investment memo dashboard with About Architecture view."""
+    return templates.TemplateResponse(request=request, name="index.html")
+
+
 @app.get("/api/quota")
 def get_quota(
     request: Request,

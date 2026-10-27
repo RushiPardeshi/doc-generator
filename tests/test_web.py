@@ -28,6 +28,20 @@ def test_index_page():
     assert "headerTopicInput" in res.text
     assert "collapsedQuickBar" in res.text
     assert "leftConfigCol" in res.text
+    assert "btnAboutHeader" in res.text
+    assert "aboutDialog" in res.text
+
+
+def test_about_page_and_architecture_content():
+    res = client.get("/about")
+    assert res.status_code == 200
+    assert "btnAboutHeader" in res.text
+    assert "aboutDialog" in res.text
+    assert "System Architecture & Guardrails" in res.text
+    assert "Multi-Source Data Accumulation" in res.text
+    assert "Hard Numerical Traceability Guard" in res.text
+    assert "Deterministic Anti-Slop Voice Linter" in res.text
+    assert "Grounded Minto Synthesizer" in res.text
 
 
 def test_quota_endpoint():

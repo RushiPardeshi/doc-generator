@@ -73,6 +73,33 @@
       color: #64748b !important;
     }
 
+    /* Modern Native <dialog> Modal Styles */
+    dialog:modal {
+      overscroll-behavior: contain;
+    }
+    dialog::backdrop {
+      overflow: hidden;
+      overscroll-behavior: contain;
+      background-color: rgba(6, 9, 17, 0.85);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Custom Sleek Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
     /* Robust Typography Styles for Markdown Rendering */
     .prose h1 {
       font-size: 1.5rem;
@@ -255,6 +282,18 @@
 
       <!-- Top Badges & Actions -->
       <div class="flex items-center space-x-2.5 text-xs shrink-0">
+        <button 
+          type="button" 
+          id="btnAboutHeader" 
+          onclick="openAboutDialog()" 
+          class="px-3 py-1.5 rounded-full bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 hover:border-slate-600 text-slate-200 hover:text-white font-medium transition cursor-pointer flex items-center space-x-1.5 shadow-xs"
+          title="System Architecture & Guardrails Overview"
+        >
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>About</span>
+        </button>
         <button 
           type="button" 
           id="btnNewSynthesisHeader" 
@@ -1469,7 +1508,71 @@
       link.click();
     }
 
-    // Auto-restore saved email on load
+    // Architecture & About Modal Functions
+    function openAboutDialog(tabName) {
+      const dialog = document.getElementById('aboutDialog');
+      if (dialog) {
+        if (typeof dialog.showModal === 'function') {
+          if (!dialog.open) {
+            dialog.showModal();
+          }
+        } else {
+          dialog.setAttribute('open', '');
+        }
+        if (tabName) {
+          switchAboutTab(tabName);
+        }
+        try {
+          if (window.location.hash !== '#about') {
+            history.pushState(null, '', '#about');
+          }
+        } catch (e) {}
+      }
+    }
+
+    function closeAboutDialog() {
+      const dialog = document.getElementById('aboutDialog');
+      if (dialog) {
+        if (typeof dialog.close === 'function') {
+          if (dialog.open) {
+            dialog.close();
+          }
+        } else {
+          dialog.removeAttribute('open');
+        }
+        if (window.location.hash === '#about') {
+          try {
+            history.pushState(null, document.title, window.location.pathname + window.location.search);
+          } catch (e) {
+            window.location.hash = '';
+          }
+        }
+      }
+    }
+
+    function switchAboutTab(tabName) {
+      const allTabs = ['overview', 'accumulation', 'routing', 'reasoning', 'guardrails', 'evaluation'];
+      allTabs.forEach(t => {
+        const btn = document.getElementById(`aboutTabBtn-${t}`);
+        const pane = document.getElementById(`aboutTabContent-${t}`);
+        if (btn) {
+          if (t === tabName) {
+            btn.className = "about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap bg-emerald-500/15 text-emerald-300 border border-emerald-500/30";
+          } else {
+            btn.className = "about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent";
+          }
+        }
+        if (pane) {
+          if (t === tabName) {
+            pane.classList.remove('hidden');
+          } else {
+            pane.classList.add('hidden');
+          }
+        }
+      });
+    }
+
+    // Auto-restore saved email on load & setup dialog listeners
     window.addEventListener('DOMContentLoaded', () => {
       const savedEmail = localStorage.getItem('thesis_user_email');
       if (savedEmail) {
@@ -1477,6 +1580,49 @@
         if (emailInput) {
           emailInput.value = savedEmail;
           refreshQuota();
+        }
+      }
+
+      // About dialog click outside & light dismiss setup
+      const aboutDialog = document.getElementById('aboutDialog');
+      if (aboutDialog) {
+        const outside = (e, dialog) => {
+          const r = dialog.getBoundingClientRect();
+          return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+        };
+        let pressedOutside = false;
+        aboutDialog.addEventListener('pointerdown', (e) => {
+          pressedOutside = outside(e, aboutDialog);
+        });
+        aboutDialog.addEventListener('pointerup', (e) => {
+          if (pressedOutside && outside(e, aboutDialog)) {
+            closeAboutDialog();
+          }
+        });
+        aboutDialog.addEventListener('close', () => {
+          if (window.location.hash === '#about') {
+            try {
+              history.pushState(null, document.title, window.location.pathname + window.location.search);
+            } catch (e) {
+              window.location.hash = '';
+            }
+          }
+        });
+      }
+
+      // Check if arriving with #about or /about
+      if (window.location.hash === '#about' || window.location.pathname === '/about') {
+        openAboutDialog();
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash === '#about') {
+        openAboutDialog();
+      } else {
+        const dialog = document.getElementById('aboutDialog');
+        if (dialog && dialog.open) {
+          dialog.close();
         }
       }
     });
@@ -1513,5 +1659,613 @@
       </div>
     </div>
   </div>
+
+  <!-- System Architecture & About Modal Dialog -->
+  <dialog id="aboutDialog" aria-labelledby="aboutDialogTitle" class="fixed inset-0 m-auto max-w-5xl w-[95vw] md:w-[90vw] lg:w-[85vw] max-h-[92vh] bg-transparent p-0 rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden outline-none z-50">
+    <div class="bg-dark-900 border border-slate-700 text-slate-100 rounded-2xl flex flex-col h-full max-h-[92vh] overflow-hidden shadow-2xl">
+      <!-- Modal Header -->
+      <div class="p-5 md:px-6 md:py-4 border-b border-slate-800 bg-dark-900/95 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base shrink-0">
+            Δ
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 id="aboutDialogTitle" class="text-base md:text-lg font-bold text-slate-100 tracking-tight">System Architecture & Guardrails</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">v1.0</span>
+            </div>
+            <p class="text-xs text-slate-400 line-clamp-1">From data accumulation and intent routing to 360° debate, Minto synthesis, and multi-tier guardrails</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button 
+            type="button" 
+            onclick="closeAboutDialog()" 
+            class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700"
+            aria-label="Close Architecture Overview"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs Inside Dialog -->
+      <div class="flex items-center space-x-1 px-4 md:px-6 py-2.5 bg-dark-950/70 border-b border-slate-800/80 overflow-x-auto text-xs shrink-0 custom-scrollbar">
+        <button type="button" onclick="switchAboutTab('overview')" id="aboutTabBtn-overview" class="about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+          ⚡ Pipeline Flow
+        </button>
+        <button type="button" onclick="switchAboutTab('accumulation')" id="aboutTabBtn-accumulation" class="about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          🌐 1. Data Accumulation
+        </button>
+        <button type="button" onclick="switchAboutTab('routing')" id="aboutTabBtn-routing" class="about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          🔀 2. Intent & Routing
+        </button>
+        <button type="button" onclick="switchAboutTab('reasoning')" id="aboutTabBtn-reasoning" class="about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          🧠 3. Reasoning Engine
+        </button>
+        <button type="button" onclick="switchAboutTab('guardrails')" id="aboutTabBtn-guardrails" class="about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          🛡️ 4. Multi-Tier Guardrails
+        </button>
+        <button type="button" onclick="switchAboutTab('evaluation')" id="aboutTabBtn-evaluation" class="about-tab-btn px-3 py-1.5 rounded-lg font-medium transition cursor-pointer whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          ⚖️ 5. Evaluation Harness
+        </button>
+      </div>
+
+      <!-- Scrollable Tab Content Container -->
+      <div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6 text-sm text-slate-300 custom-scrollbar">
+
+        <!-- TAB 1: PIPELINE OVERVIEW -->
+        <div id="aboutTabContent-overview" class="about-tab-content space-y-6">
+          <!-- Executive Callout -->
+          <div class="bg-dark-800/90 border border-emerald-500/20 rounded-xl p-4 md:p-5">
+            <div class="flex items-start space-x-3">
+              <span class="text-2xl">🎯</span>
+              <div>
+                <h3 class="text-sm font-semibold text-emerald-300 mb-1">The Core Thesis & Problem Statement</h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Large Language Models typically fail at rigorous investment and technical research because <strong class="text-white">nothing forces them to commit</strong>. Given a raw research packet, naive one-shot prompts default to bland summaries littered with synthetic transitions (<em>"delve"</em>, <em>"testament to"</em>, <em>"not only X but also Y"</em>), cowardly hedging, hallucinated metrics, and zero falsifiable criteria.
+                </p>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                  <strong class="text-emerald-400">Thesis Engine</strong> replaces naive prompts with a deterministic architectural pipeline: grounding atomic claims with verbatim string verification, stress-testing hypotheses via adversarial pre-mortems, synthesizing through Minto's Pyramid Principle, and enforcing a hard numerical traceability invariant.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual End-to-End Pipeline Diagram -->
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center">
+              <span>Complete System Architecture Flow</span>
+              <span class="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">End-to-End</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              <!-- Node 0: Ingestion & Data Accumulation -->
+              <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2 hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold font-mono text-emerald-400">LAYER 0</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-semibold">Accumulation</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-100">Multi-Source Data Ingestion</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Live Tavily web search, Gemini Google Grounding with temporal anchoring, real-time SEC audited FMP financials, SerpApi Google Scholar citations, and S-1 EDGAR filings.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-1">
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Tavily API</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Gemini Grounding</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">FMP Financials</span>
+                </div>
+              </div>
+
+              <!-- Node 1: Dynamic Router -->
+              <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2 hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold font-mono text-cyan-400">ROUTER</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-semibold">Classification</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-100">Query Intent & Disambiguation</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Classifies intent into 6 archetypes (Company, Topic, Industry, Comparison, Macro, Ambiguous). Halts ambiguous terms before consuming compute.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-1">
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">6 Categories</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Ambiguity Trap</span>
+                </div>
+              </div>
+
+              <!-- Node 2: Stage 1 Claims Extractor -->
+              <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2 hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold font-mono text-indigo-400">STAGE 1</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-semibold">Extraction</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-100">Grounded Atomic Claims</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Extracts assertions into FACT, ESTIMATE, and OPINION. Enforces verbatim string match invariant against the source dossier text.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-1">
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Verbatim Match</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Quote Invariant</span>
+                </div>
+              </div>
+
+              <!-- Node 3: Stage 2 Theses & Pre-Mortem -->
+              <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2 hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold font-mono text-purple-400">STAGE 2</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold">Debate</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-100">360° Debate & Pre-Mortem</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Proposes Bull, Conditional, and Bear/Pass theses. Adversarial Critic Agent launches 3-year fatal failure attack. Emits auto-PASS if unhedged.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-1">
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Critic Agent</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Auto-PASS</span>
+                </div>
+              </div>
+
+              <!-- Node 4: Stage 3 Minto Synthesizer -->
+              <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2 hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold font-mono text-amber-400">STAGE 3</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">Synthesis</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-100">Grounded Minto Pyramid</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Barbara Minto pyramid structure: Answer-First conviction, 3 MECE pillars strictly citing claim IDs [C1, C4], and falsification triggers.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-1">
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Answer-First</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Claim IDs [C#]</span>
+                </div>
+              </div>
+
+              <!-- Node 5: Stage 4 Guardrails -->
+              <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2 hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold font-mono text-rose-400">STAGE 4</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-semibold">Guardrails</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-100">Traceability & Voice Linter</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Hard Numerical Traceability Invariant (0 untraced numbers allowed), regex linter for banned AI cliches, em-dash limits, and self-refine loop.
+                </p>
+                <div class="pt-1 flex flex-wrap gap-1">
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Zero Untraced</span>
+                  <span class="text-[10px] bg-dark-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">Regex Linter</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hard Architectural Invariants Table -->
+          <div class="border border-slate-700/80 rounded-xl overflow-hidden bg-dark-800">
+            <div class="px-4 py-3 bg-dark-950 border-b border-slate-700/80 flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-200 uppercase tracking-wider">Non-Negotiable System Invariants</span>
+              <span class="text-[11px] text-emerald-400 font-mono">100% Enforced</span>
+            </div>
+            <div class="divide-y divide-slate-800 text-xs">
+              <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="font-semibold text-slate-200">1. Verbatim Claim Verification Invariant</div>
+                  <div class="text-slate-400">Every extracted claim's source quote must exist verbatim in the primary dossier.</div>
+                </div>
+                <span class="shrink-0 px-2 py-1 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-mono text-[11px]">Unmatched quotes discarded</span>
+              </div>
+              <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="font-semibold text-slate-200">2. Hard Numerical Traceability Invariant</div>
+                  <div class="text-slate-400">100% of numbers, percentages, and currencies in final text must map to cited claims.</div>
+                </div>
+                <span class="shrink-0 px-2 py-1 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-mono text-[11px]">Untraced number rejects memo</span>
+              </div>
+              <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="font-semibold text-slate-200">3. Deterministic Voice De-Slopping</div>
+                  <div class="text-slate-400">Regex check for AI writing patterns ("delve", "testament to", em-dash clusters).</div>
+                </div>
+                <span class="shrink-0 px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono text-[11px]">Automated self-refinement rewrite</span>
+              </div>
+              <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="font-semibold text-slate-200">4. Scientific Objectivity vs Actionable Conviction</div>
+                  <div class="text-slate-400">Non-company topics strictly forbid investment advice; company memos mandate clear stance.</div>
+                </div>
+                <span class="shrink-0 px-2 py-1 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono text-[11px]">Regex scrubbing & guardrail pass</span>
+              </div>
+              <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="font-semibold text-slate-200">5. Cross-Model Evaluation Integrity</div>
+                  <div class="text-slate-400">Independent judge model (Claude 3.5 Sonnet judging Gemini) eliminates self-grading bias.</div>
+                </div>
+                <span class="shrink-0 px-2 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono text-[11px]">Unbiased 4-axis grading</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: DATA ACCUMULATION -->
+        <div id="aboutTabContent-accumulation" class="about-tab-content hidden space-y-6">
+          <div class="bg-dark-800/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+            <h3 class="text-base font-semibold text-slate-100 flex items-center">
+              <span class="text-emerald-400 mr-2">🌐</span> Layer 0: Multi-Source Data Accumulation
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Before analytical reasoning begins, Thesis Engine aggregates grounded primary source material across multiple specialized data channels, preventing stale cached assumptions and SEO hallucination.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Tavily Search -->
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-emerald-400">Tavily Web Search API</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">Primary Search</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Direct API integration conducting live organic web crawling. Extracts high-density technical specifications, company filings, release notes, and real-time market data without consumer SEO clutter.
+              </p>
+              <ul class="text-[11px] text-slate-400 space-y-1 list-disc pl-4">
+                <li>Parses clean markdown representations of retrieved articles</li>
+                <li>Preserves publication dates and original source URLs for claim attribution</li>
+                <li>Operates independently of LLM provider tokens</li>
+              </ul>
+            </div>
+
+            <!-- Gemini Search Grounding -->
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-emerald-400">Gemini Google Search Grounding</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">Temporal Anchoring</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Native Google GenAI search tool integration (<code class="text-emerald-400">types.Tool(google_search=...)</code>) with temporal anchoring instructions.
+              </p>
+              <ul class="text-[11px] text-slate-400 space-y-1 list-disc pl-4">
+                <li>Injects explicit temporal qualifier (<code class="text-slate-300">current_date</code>) into prompt template</li>
+                <li>Prevents stale cached numbers for fast-moving metrics (headcount, pricing, funding)</li>
+                <li>Prioritizes primary disclosures (press releases, changelogs, live pricing)</li>
+              </ul>
+            </div>
+
+            <!-- Financial Modeling Prep -->
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-emerald-400">Financial Modeling Prep (FMP) API</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">Audited Financials</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Fetches audited SEC 10-K / 10-Q statements and real-time equity fundamentals for company tickers.
+              </p>
+              <ul class="text-[11px] text-slate-400 space-y-1 list-disc pl-4">
+                <li>Pulls Revenue, Gross Margin, Net Income, Operating Cash Flow, and EBITDA</li>
+                <li>Calculates valuation multiples: Enterprise Value (EV), P/E, EV/EBITDA, EV/Sales</li>
+                <li>Formats verified figures into deterministic Markdown tables before LLM ingestion</li>
+              </ul>
+            </div>
+
+            <!-- SerpApi Google Scholar -->
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-emerald-400">SerpApi / Google Scholar Citations</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">Academic Literature</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Synthesizes peer-reviewed scholarly literature for academic topics (e.g., LIIF, deep learning architectures).
+              </p>
+              <ul class="text-[11px] text-slate-400 space-y-1 list-disc pl-4">
+                <li>Captures publication year, author teams, and citation count indicators</li>
+                <li>Extracts authoritative paper abstracts for objective empirical benchmarking</li>
+                <li>Ensures scientific rigor before synthesis begins</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Curated Primary Dossier & Stateless Invariant -->
+          <div class="bg-dark-800 border border-slate-700/80 rounded-xl p-4 space-y-2">
+            <h4 class="text-xs font-semibold text-slate-200 uppercase tracking-wider">Curated Primary Dossiers & Zero Server Storage</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              To test the pipeline without hindsight bias, Thesis Engine includes anonymized SEC EDGAR filings (e.g. Datadog's August 2019 S-1 registration statement anonymized as <em>Apex Systems</em>). Every dossier uploaded or researched is processed purely in-memory: <strong class="text-slate-200">zero server storage, zero database persistence of user topics or documents</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 3: DYNAMIC ROUTING & INTENT -->
+        <div id="aboutTabContent-routing" class="about-tab-content hidden space-y-6">
+          <div class="bg-dark-800/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+            <h3 class="text-base font-semibold text-slate-100 flex items-center">
+              <span class="text-cyan-400 mr-2">🔀</span> Intent Classification & Dynamic Routing (<code class="text-xs text-cyan-300 font-mono">src/routing/</code>)
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Not every analytical query is an equity pitch. Thesis Engine classifies input queries into 6 distinct analytical archetypes, applying tailored retrieval strategies, custom system instructions, and category-specific output guardrails.
+            </p>
+          </div>
+
+          <!-- Category Archetypes Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-400">COMPANY</span>
+                <span class="text-[10px] text-slate-400">Requires Conviction</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">Single corporate equity analysis requiring audited financials, margin analysis, 360° debate, and high-conviction buy/hold/pass stance.</p>
+              <div class="text-[11px] text-slate-400 font-mono bg-dark-950 p-2 rounded border border-slate-800">Tool: FMP Financials + Dossier</div>
+            </div>
+
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-cyan-400">TOPIC</span>
+                <span class="text-[10px] text-slate-400">Strict Neutrality</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">Academic concept, algorithmic architecture, or scientific breakthrough. Strictly prohibits investment recommendations; enforces objective synthesis.</p>
+              <div class="text-[11px] text-slate-400 font-mono bg-dark-950 p-2 rounded border border-slate-800">Tool: SerpApi Scholar + Tavily</div>
+            </div>
+
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-indigo-400">INDUSTRY</span>
+                <span class="text-[10px] text-slate-400">Market Landscape</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">Ecosystem and market dynamics, value chain concentration, TAM/SAM sizing, regulatory headwinds, and architectural shifts.</p>
+              <div class="text-[11px] text-slate-400 font-mono bg-dark-950 p-2 rounded border border-slate-800">Tool: Authoritative Industry Research</div>
+            </div>
+
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-400">COMPARISON</span>
+                <span class="text-[10px] text-slate-400">Head-to-Head</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">Direct comparison between two architectures, frameworks, or competitors across structural tradeoffs and empirical benchmarks.</p>
+              <div class="text-[11px] text-slate-400 font-mono bg-dark-950 p-2 rounded border border-slate-800">Tool: Dual Benchmark Matrix</div>
+            </div>
+
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-400">MACRO</span>
+                <span class="text-[10px] text-slate-400">Policy & Transmission</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">Monetary policy, interest rate transmission channels, currency volatility, and cross-asset spillover mechanisms.</p>
+              <div class="text-[11px] text-slate-400 font-mono bg-dark-950 p-2 rounded border border-slate-800">Tool: Macroeconomic Transmission</div>
+            </div>
+
+            <div class="bg-dark-800 border border-rose-500/40 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-rose-400">AMBIGUOUS</span>
+                <span class="text-[10px] text-rose-300">Ambiguity Trap</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">Halts pipeline execution for polysemous or vague queries (e.g., "Apple", "Cloud"), emitting structured disambiguation options to avoid token waste.</p>
+              <div class="text-[11px] text-rose-300 font-mono bg-dark-950 p-2 rounded border border-rose-900/40">Action: Halts & prompts user</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: REASONING ENGINE -->
+        <div id="aboutTabContent-reasoning" class="about-tab-content hidden space-y-6">
+          <div class="bg-dark-800/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+            <h3 class="text-base font-semibold text-slate-100 flex items-center">
+              <span class="text-indigo-400 mr-2">🧠</span> Structured Reasoning Pipeline (Stages 1 to 3)
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Standard LLMs jump straight from prompt to essay, causing compounding hallucinations and cowardly hedging. Thesis Engine breaks synthesis into three rigorously isolated reasoning stages with schema enforcement via Pydantic.
+            </p>
+          </div>
+
+          <!-- Stage 1 -->
+          <div class="bg-dark-800 border border-slate-700 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
+              <span class="text-xs font-bold font-mono text-indigo-400">STAGE 1: Grounded Claim Extraction</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-semibold">src/reasoning/claims.py</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Deconstructs unstructured research dossiers into atomic assertions. Each claim is typed as <code class="text-emerald-400 font-mono">FACT</code> (audited or empirical metrics), <code class="text-amber-400 font-mono">ESTIMATE</code> (forward projections), or <code class="text-indigo-400 font-mono">OPINION</code> (subjective commentary).
+            </p>
+            <div class="bg-dark-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300 space-y-1">
+              <div class="text-emerald-400 font-semibold">🔒 The Verbatim String Match Invariant (verify_claim_quotes):</div>
+              <div class="text-slate-400">Every claim requires a `source_quote`. The engine runs an exact substring match against the raw dossier. If an LLM fabricates or alters a single word in the quote, the claim is rejected immediately.</div>
+            </div>
+          </div>
+
+          <!-- Stage 2 -->
+          <div class="bg-dark-800 border border-slate-700 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
+              <span class="text-xs font-bold font-mono text-purple-400">STAGE 2: 360° Candidate Theses & Adversarial Pre-Mortem</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold">src/reasoning/debate.py</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Forces commitment by formulating 3 distinct, mutually opposing theses:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                <strong class="text-emerald-400 block mb-1">1. Bull Case</strong>
+                <p class="text-slate-400">Aggressive compounding, multi-product expansion, customer lock-in.</p>
+              </div>
+              <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                <strong class="text-amber-400 block mb-1">2. Conditional Case</strong>
+                <p class="text-slate-400">Margin-of-safety entry criteria, valuation discipline, inflection catalysts.</p>
+              </div>
+              <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                <strong class="text-rose-400 block mb-1">3. Bear / Pass Case</strong>
+                <p class="text-slate-400">Structural friction, high concentration risk, decelerating net expansion.</p>
+              </div>
+            </div>
+            <div class="bg-dark-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300 space-y-1">
+              <div class="text-purple-400 font-semibold">⚔️ Adversarial Pre-Mortem Critic Agent (Du et al., 2023):</div>
+              <div class="text-slate-400">"Assume it is 3 years later and this investment lost 80% of value. Exactly how did it fail?" If all theses fail the pre-mortem, the arbitrator automatically issues an unvarnished PASS.</div>
+            </div>
+          </div>
+
+          <!-- Stage 3 -->
+          <div class="bg-dark-800 border border-slate-700 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
+              <span class="text-xs font-bold font-mono text-amber-400">STAGE 3: Grounded Minto Synthesizer</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">src/reasoning/minto.py</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Constructs the draft using Barbara Minto's Pyramid Principle:
+            </p>
+            <ol class="text-xs text-slate-300 space-y-1.5 list-decimal pl-4">
+              <li><strong class="text-slate-100">Answer-First Conviction:</strong> Direct top-line investment recommendation and thesis statement. Zero throat-clearing warm-up.</li>
+              <li><strong class="text-slate-100">3 Supporting Pillars:</strong> Mutually Exclusive, Collectively Exhaustive (MECE) arguments strictly citing verified Claim IDs (<code class="text-indigo-300 font-mono">[C1]</code>, <code class="text-indigo-300 font-mono">[C4]</code>).</li>
+              <li><strong class="text-slate-100">Structural Risks & Catalysts:</strong> Failure mechanisms carried directly from the adversarial pre-mortem.</li>
+              <li><strong class="text-slate-100">What Would Change My Mind:</strong> Concrete falsification triggers strictly derived from cited metrics (e.g. Net Expansion falling below 120%), preventing subjective goalpost moving.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- TAB 5: MULTI-TIER GUARDRAILS -->
+        <div id="aboutTabContent-guardrails" class="about-tab-content hidden space-y-6">
+          <div class="bg-dark-800/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+            <h3 class="text-base font-semibold text-slate-100 flex items-center">
+              <span class="text-rose-400 mr-2">🛡️</span> Multi-Tier Guardrails & Voice De-Slopping Engine
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Standard LLM apps rely on system prompts alone to maintain style and factual accuracy. Thesis Engine implements deterministic, non-negotiable code invariants that run locally after generation.
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Numerical Traceability Guard -->
+            <div class="bg-dark-800 border border-rose-500/30 rounded-xl p-4 md:p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-rose-400 uppercase tracking-wide">1. Hard Numerical Traceability Guard</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-mono">src/voice/traceability.py</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Deterministic regex parser extracts every single number, percentage, dollar figure, and multiplier in the drafted memo.
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <span class="text-emerald-400 font-semibold block mb-1">✓ Verified Number Match</span>
+                  <p class="text-slate-400">If a number maps back to an extracted <code class="text-indigo-300">GroundedClaim</code>, it is marked as traceable and grounded.</p>
+                </div>
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <span class="text-rose-400 font-semibold block mb-1">✗ Zero Untraced Numbers Allowed</span>
+                  <p class="text-slate-400">Any untraced or hallucinated figure fails validation immediately, preventing fabricated financial claims from slipping through.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deterministic Anti-Slop Voice Linter -->
+            <div class="bg-dark-800 border border-amber-500/30 rounded-xl p-4 md:p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wide">2. Deterministic Anti-Slop Voice Linter</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">src/voice/linter.py & banned_patterns.py</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                A deterministic local linter targeting Wikipedia AI-writing patterns, corporate consulting jargon, and investor cliches.
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <strong class="text-amber-400 block mb-1">Banned Clichés</strong>
+                  <p class="text-slate-400 leading-relaxed"><em>"delve", "testament to", "in an increasingly... world", "tapestry", "landscape", "holistic", "pivotal", "beacon", "poised to", "not only... but also"</em>.</p>
+                </div>
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <strong class="text-amber-400 block mb-1">Structural Tells</strong>
+                  <p class="text-slate-400 leading-relaxed">Em-dash clusters (&le; 1 per 750 words allowed), Rule-of-Three adjective triplets, passive hedging (<em>"it's important to note"</em>).</p>
+                </div>
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <strong class="text-amber-400 block mb-1">Self-Refine Loop</strong>
+                  <p class="text-slate-400 leading-relaxed">If violations persist, <code class="text-slate-300">src/voice/editor.py</code> feeds the exact linter feedback back to the LLM to rewrite the draft until clean.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category-Aware Recommendation Guardrails -->
+            <div class="bg-dark-800 border border-indigo-500/30 rounded-xl p-4 md:p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-indigo-400 uppercase tracking-wide">3. Category-Aware Recommendation Guardrail</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono">src/templates/guardrail.py</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Maintains strict compliance and regulatory boundaries based on query classification:
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <strong class="text-indigo-400 block mb-1">For Topic / Industry / Macro</strong>
+                  <p class="text-slate-400">Strictly forbids investment advice phrases (<em>"we recommend"</em>, <em>"portfolio allocation"</em>, <em>"target price"</em>). Automated scrubbing cleanses policy leaks.</p>
+                </div>
+                <div class="bg-dark-950 p-3 rounded-lg border border-slate-800">
+                  <strong class="text-emerald-400 block mb-1">For Company Memos</strong>
+                  <p class="text-slate-400">Mandates decisive action: Buy, Conditional, or Pass. Hedging is penalized; conviction is enforced.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 6: EVALUATION HARNESS -->
+        <div id="aboutTabContent-evaluation" class="about-tab-content hidden space-y-6">
+          <div class="bg-dark-800/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+            <h3 class="text-base font-semibold text-slate-100 flex items-center">
+              <span class="text-amber-400 mr-2">⚖️</span> Cross-Model Evaluation & Verification Harness (<code class="text-xs text-amber-300 font-mono">src/eval/</code>)
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Evaluating generative AI requires eliminating self-grading bias. Thesis Engine couples an un-rigged benchmark suite with an independent cross-model judge.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cross-Model Judge -->
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+              <span class="text-xs font-semibold text-amber-400">Cross-Model Independent Judge</span>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Generator model and judge model are assigned independently (e.g. Claude 3.5 Sonnet judging Gemini 3.8 Flash, or vice versa) to prevent self-grading confirmation bias.
+              </p>
+              <div class="space-y-1.5 text-xs text-slate-300 pt-1">
+                <div class="flex items-center justify-between bg-dark-950 px-2.5 py-1 rounded border border-slate-800">
+                  <span>1. Thesis Clarity & Conviction</span>
+                  <span class="font-mono text-emerald-400">1 – 5</span>
+                </div>
+                <div class="flex items-center justify-between bg-dark-950 px-2.5 py-1 rounded border border-slate-800">
+                  <span>2. Falsifiability & Risk Realism</span>
+                  <span class="font-mono text-emerald-400">1 – 5</span>
+                </div>
+                <div class="flex items-center justify-between bg-dark-950 px-2.5 py-1 rounded border border-slate-800">
+                  <span>3. Evidence Grounding & Linkage</span>
+                  <span class="font-mono text-emerald-400">1 – 5</span>
+                </div>
+                <div class="flex items-center justify-between bg-dark-950 px-2.5 py-1 rounded border border-slate-800">
+                  <span>4. Prose Conviction & Slop Score</span>
+                  <span class="font-mono text-emerald-400">1 – 5</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Symmetrical Mega-Prompt Baseline & Ablation -->
+            <div class="bg-dark-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+              <span class="text-xs font-semibold text-amber-400">Symmetrical Mega-Prompt & Ablations</span>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Contrasts the multi-stage pipeline against an identical, symmetric 2,000-token prompt receiving all instructions simultaneously.
+              </p>
+              <ul class="text-[11px] text-slate-400 space-y-1.5 list-disc pl-4">
+                <li><strong class="text-slate-200">Ablation Testing:</strong> Supports flags (<code class="text-slate-300">--no-debate</code>, <code class="text-slate-300">--no-voice</code>) to isolate the exact empirical lift provided by each stage.</li>
+                <li><strong class="text-slate-200">Blind Evaluation:</strong> Generates anonymized review documents (<code class="text-slate-300">blind_eval.md</code>) for unbiased human audit.</li>
+                <li><strong class="text-slate-200">Token & Cost Tracking:</strong> Real-time tracking of prompt tokens, completion tokens, and dollar costs across Gemini and Claude.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 md:px-6 border-t border-slate-800 bg-dark-950 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-xs">
+        <div class="flex items-center space-x-2 text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Thesis Engine Architecture • Strict Grounding & Non-Negotiable Invariants</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button 
+            type="button" 
+            onclick="closeAboutDialog()" 
+            class="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-dark-900 font-semibold transition cursor-pointer"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
 </body>
 </html>
